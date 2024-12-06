@@ -58,12 +58,11 @@ class User(db.Model, UserMixin):
     _password = db.Column(db.String(255), unique=False, nullable=False)
     _role = db.Column(db.String(20), default="User", nullable=False)
     _pfp = db.Column(db.String(255), unique=False, nullable=True)
-    _car = db.Column(db.String(255), unique=False, nullable=True)
    
     posts = db.relationship('Post', backref='author', lazy=True)
                                  
     
-    def __init__(self, name, uid, password="", role="User", pfp='', car='', email='?'):
+    def __init__(self, name, uid, password="", role="User", pfp='', email='?'):
         """
         Constructor, 1st step in object creation.
         
@@ -80,7 +79,6 @@ class User(db.Model, UserMixin):
         self.set_password(password)
         self._role = role
         self._pfp = pfp
-        self._car = car
 
     # UserMixin/Flask-Login requires a get_id method to return the id as a string
     def get_id(self):
@@ -297,12 +295,6 @@ class User(db.Model, UserMixin):
         """
         self._pfp = pfp
 
-    @property
-    def car(self):
-        return self._car
-    @car.setter
-    def car(self, car):
-        self._car = car
     def create(self, inputs=None):
         """
         Adds a new record to the table and commits the transaction.
@@ -337,7 +329,6 @@ class User(db.Model, UserMixin):
             "email": self.email,
             "role": self._role,
             "pfp": self._pfp,
-            "car": self._car
         }
         return data
         
@@ -419,32 +410,6 @@ class User(db.Model, UserMixin):
         self.pfp = None
         db.session.commit()
         
-    def save_car(self, image_data, filename):
-        """
-        Saves the user's car picture.
-        
-        Args:
-            image_data (bytes): The image data of the car picture.
-            filename (str): The filename of the car picture.
-        """
-        try:
-            user_dir = os.path.join(app.config['UPLOAD_FOLDER'], self.uid)
-            if not os.path.exists(user_dir):
-                os.makedirs(user_dir)
-            file_path = os.path.join(user_dir, filename)
-            with open(file_path, 'wb') as img_file:
-                img_file.write(image_data)
-            self.update({"car": filename})
-        except Exception as e:
-            raise e
-        
-    def delete_car(self):
-        """
-        Deletes the user's profile picture from the user record.
-        """
-        self.car = None
-        db.session.commit()
-        
     def set_uid(self, new_uid=None):
         """
         Updates the user's directory based on the new UID provided.
@@ -505,7 +470,7 @@ def initUsers():
         db.create_all()
         """Tester data for table"""
         
-        u1 = User(name='Thomas Edison', uid=app.config['ADMIN_USER'], password=app.config['ADMIN_PASSWORD'], pfp='toby.png', car='toby_car.png', role="Admin")
+        u1 = User(name='Thomas Edison', uid=app.config['ADMIN_USER'], password=app.config['ADMIN_PASSWORD'], pfp='toby.png', role="Admin")
         u2 = User(name='Grace Hopper', uid=app.config['DEFAULT_USER'], password=app.config['DEFAULT_PASSWORD'], pfp='hop.png')
         u3 = User(name='Nicholas Tesla', uid='niko', password='123niko', pfp='niko.png' )
         users = [u1, u2, u3]
