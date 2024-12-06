@@ -160,34 +160,23 @@ def initChannels():
             Channel(name='Help Desk', group_id=support.id)
         ]
         
-        # Shared Interest Channels 
-        limitless_connection = Group.query.filter_by(_name='Limitless Connections').first() 
-        dnhs_football = Group.query.filter_by(_name='DNHS Football').first() 
-        school_subjects = Group.query.filter_by(_name='School Subjects').first()
-        music = Group.query.filter_by(_name='Music').first()
-        satire = Group.query.filter_by(_name='Satire').first()
-        activity_hub = Group.query.filter_by(_name='Activity Hub').first()
-        shared_interest_channels = [
-            Channel(name='Penpal Letters', group_id=limitless_connection.id),
-            Channel(name='Game vs Poway', group_id=dnhs_football.id),
-            Channel(name='Game vs Westview', group_id=dnhs_football.id),
-            Channel(name='Math', group_id=school_subjects.id),
-            Channel(name='English', group_id=school_subjects.id),
-            Channel(name='Artist', group_id=music.id),
-            Channel(name='Music Genre', group_id=music.id),
-            Channel(name='Humor', group_id=satire.id),
-            Channel(name='Memes', group_id=satire.id),
-            Channel(name='Irony', group_id=satire.id),
-            Channel(name='Cyber Patriots', group_id=activity_hub.id),
-            Channel(name='Robotics', group_id=activity_hub.id),
+        # Gas Car Channels 
+        sedan = Group.query.filter_by(_name='Sedan').first() 
+        truck = Group.query.filter_by(_name='Truck').first() 
+        muscle_car = Group.query.filter_by(_name='Muscle Car').first()
+        sports_car = Group.query.filter_by(_name='Sports Car').first()
+        gas_car_channels = [
+            Channel(name='2025 Hyundai Elantra', group_id=sedan.id),
+            Channel(name='Ford F150', group_id=truck.id),
+            Channel(name='Chevrolet Camero', group_id=muscle_car.id),
+            Channel(name='Porche 911', group_id=sports_car.id),
         ]
         
-        #P3 Channels Below
-         # Share and Care channels below:
+        # Electric Car channels below:
         DNHSCafe = Group.query.filter_by(_name='Study Room').first()
         chess_forum = Group.query.filter_by(_name='Chess Forum').first()
         Underground_Music = Group.query.filter_by(_name='Underground Music').first()
-        share_and_care_channels = [
+        hybrid_car_channels = [
             Channel(name='Math', group_id=DNHSCafe.id),
             Channel(name='Chemistry', group_id=DNHSCafe.id),
             Channel(name='Biology', group_id=DNHSCafe.id),
@@ -202,16 +191,14 @@ def initChannels():
             Channel(name='Genres', group_id=Underground_Music.id),
         ]
 
-        # P2 channels below:
-        
-        # Vote for the GOAT channels below:
+        # Hybrid channels below:
         internet_debates = Group.query.filter_by(_name='Internet Debates').first() 
         calico_vote = Group.query.filter_by(_name='Calico Vote').first() 
         dnero_store = Group.query.filter_by(_name='Dnero Store').first()
         beverage_debates = Group.query.filter_by(_name='Beverage Debates').first()
         nfl_goats = Group.query.filter_by(_name='NFL GOATs').first()
         car_debates = Group.query.filter_by(_name='Car Debates').first()
-        vote_for_the_goat_channels = [
+        electric_car_channels = [
             Channel(name='Milk vs Cereal', group_id=internet_debates.id),
             Channel(name='Hot Dog Sandwich', group_id=internet_debates.id),
             Channel(name='Pineapple on Pizza', group_id=internet_debates.id),
@@ -238,19 +225,7 @@ def initChannels():
             Channel(name='Gift Cards', group_id=dnero_store.id),
         ]
         
-        # P5 Channels: 
-        book_reviews = Group.query.filter_by(_name='Book Reviews').first() 
-        instabox = Group.query.filter_by(_name='Instabox').first() 
-        flavor_fusion = Group.query.filter_by(_name='Flavor Fusion').first()
-        update_the_nest = Group.query.filter_by(_name='Update The Nest').first()
-        rate_and_relate_channels = [
-            Channel(name='Fiction Books', group_id=book_reviews.id),
-            Channel(name='Nonfiction Books', group_id=book_reviews.id),
-            Channel(name='Combos', group_id=flavor_fusion.id),
-        ]
-        
-        
-        channels = home_page_channels + shared_interest_channels + vote_for_the_goat_channels + rate_and_relate_channels
+        channels = home_page_channels + gas_car_channels + hybrid_car_channels + electric_car_channels
         for channel in channels:
             try:
                 db.session.add(channel)
