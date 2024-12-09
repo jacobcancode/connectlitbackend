@@ -3,6 +3,7 @@ from sqlalchemy import Text
 from __init__ import app, db
 from model.user import User
 from model.group import Group
+from datetime import datetime
 
 class CarPost(db.Model):
     """
@@ -25,6 +26,7 @@ class CarPost(db.Model):
     _uid = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     _car_type = db.Column(db.String(255), nullable=False)
     _image_url_table = db.Column(db.String(255), nullable=False)
+    _date_posted = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, title, description, uid, car_type, image_url_table):
         """
@@ -45,6 +47,7 @@ class CarPost(db.Model):
         self._uid = uid
         self._car_type = car_type
         self._image_url_table = image_url_table
+        self._date_posted = datetime.now()
 
     def __repr__(self):
         """
@@ -54,7 +57,7 @@ class CarPost(db.Model):
         Returns:
             str: A text representation of how to create the object.
         """
-        return f"Post(id={self.id}, title={self._title}, description={self._description}, uid={self._uid}, car_type={self._car_type}, image_url_table={self._image_url_table})"
+        return f"Post(id={self.id}, title={self._title}, description={self._description}, uid={self._uid}, car_type={self._car_type}, image_url_table={self._image_url_table}, date_posted={self._date_posted})"
     
     def create(self):
         """
@@ -88,9 +91,10 @@ class CarPost(db.Model):
             "id": self.id,
             "title": self._title,
             "description": self._description,
-            "uid": user.name if user else None,
+            "uid": user.id if user else None,
             "car_type": self._car_type,
-            "image_url_table": self._image_url_table
+            "image_url_table": self._image_url_table,
+            "date_posted": self._date_posted
         }
         return data
     
