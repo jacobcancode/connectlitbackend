@@ -1,6 +1,7 @@
 # imports from flask
 import json
 import os
+import ast
 from urllib.parse import urljoin, urlparse
 from flask import abort, redirect, render_template, request, send_from_directory, url_for, jsonify  # import render_template from "public" flask libraries
 from flask_login import current_user, login_user, logout_user
@@ -69,6 +70,27 @@ def postsByUser(user_id):
         return jsonify({'message': 'User not found'}), 404
     posts = CarPost.query.filter(CarPost._uid == user_id).all()
     return jsonify([post.read() for post in posts])
+
+from model.carPostImage import carPostImage_base64_decode, carPostImage_base64_upload
+
+@app.route('/api/carPost/<int:post_id>/images', methods=['GET'])
+def getPostImages(post_id):
+    post = CarPost.query.get(post_id)
+    if post is None:
+        return jsonify({'message': 'Post not found'}), 404
+    image_url_table = post._image_url_table
+    if not image_url_table or len(image_url_table) == 0:
+        return jsonify({'message': 'There are no images for this post.'}), 404
+    
+    images = []
+    for url in ast.literal_eval(image_url_table):
+        print(url)
+        image = carPostImage_base64_decode(post_id, url)
+        images.append(image)
+        
+    return jsonify(images)
+
+
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
