@@ -24,7 +24,6 @@ from api.group import group_api
 from api.section import section_api
 from api.nestPost import nestPost_api # Justin added this, custom format for his website
 from api.messages_api import messages_api # Adi added this, messages for his website
-from api.carphoto import car_api
 from api.carChat import car_chat_api
 from api.carPost import carPost_api
 
@@ -54,7 +53,6 @@ app.register_blueprint(car_chat_api)
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
-app.register_blueprint(car_api)
 app.register_blueprint(carPost_api)
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
