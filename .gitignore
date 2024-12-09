@@ -21,4 +21,4 @@ backup/
 instance/volumes/
 instance/data.json
 instance/data.json.*.bak
-
+instance/uploads/
