@@ -25,7 +25,7 @@ class CarPost(db.Model):
     _description = db.Column(db.String(255), nullable=True)
     _uid = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     _car_type = db.Column(db.String(255), nullable=False)
-    _image_url_table = db.Column(db.String(255), nullable=False)
+    _image_url_table = db.Column(db.String(255), nullable=True)
     _date_posted = db.Column(db.DateTime, nullable=False)
 
     def __init__(self, title, description, uid, car_type, image_url_table):
@@ -97,6 +97,11 @@ class CarPost(db.Model):
             "date_posted": self._date_posted
         }
         return data
+    
+    def updateImageTable(self, image_url_table):
+        self._image_url_table = str(image_url_table)
+        print(self._image_url_table)
+        self.update()
     
     def update(self):
         """
