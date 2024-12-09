@@ -57,7 +57,7 @@ app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
 app.register_blueprint(carPost_api)
 
-@app.route('/api/allPosts/<string:car_type>', methods=['GET'])
+@app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
 def allPosts(car_type):
     if car_type not in ['gas', 'electric', 'hybrid', 'dream']:
         return jsonify({'message': 'Car type must be one of gas, electric, hybrid, dream'}), 400
