@@ -57,7 +57,7 @@ class CarPostAPI:
                 if image_url_table.count(name) > 0:
                     # If the name already exists, append a number to the end of the name
                     # This is to prevent duplicate image names
-                    newName = name.replace(".", f"({i}).", 1)
+                    newName = name.replace(".", f"_{i}.", 1)
                     name = newName
                 print(base64_image)
                 carPostImage_base64_upload(base64_image, post.id, name)
