@@ -26,6 +26,7 @@ from api.nestPost import nestPost_api # Justin added this, custom format for his
 from api.messages_api import messages_api # Adi added this, messages for his website
 from api.carphoto import car_api
 from api.carChat import car_chat_api
+from api.carPost import carPost_api
 
 from api.vote import vote_api
 # database Initialization functions
@@ -37,6 +38,7 @@ from model.channel import Channel, initChannels
 from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
+from model.carPost import CarPost
 # server only Views
 
 # register URIs for api endpoints
@@ -53,6 +55,14 @@ app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(car_api)
+app.register_blueprint(carPost_api)
+
+@app.route('/api/allPosts/<string:car_type>', methods=['GET'])
+def allPosts(car_type):
+    if car_type not in ['gas', 'electric', 'hybrid', 'dream']:
+        return jsonify({'message': 'Car type must be one of gas, electric, hybrid, dream'}), 400
+    posts = CarPost.query.filter(CarPost._car_type == car_type).all()
+    return jsonify([post.read() for post in posts])
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
