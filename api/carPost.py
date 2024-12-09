@@ -54,6 +54,8 @@ class CarPostAPI:
             for i in range(len(data['image_base64_table'])):
                 base64_image = data['image_base64_table'][i]["base64"]
                 name = data['image_base64_table'][i]["name"]
+                if image_url_table.count(name) > 0:
+                    name = f"{name}({image_url_table.count(name)})"
                 print(base64_image)
                 carPostImage_base64_upload(base64_image, post.id, name)
                 image_url_table.append(name)
