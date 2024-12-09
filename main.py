@@ -90,6 +90,33 @@ def getPostImages(post_id):
         
     return jsonify(images)
 
+@app.route('/api/data/mort', methods=['GET'])
+def get_data():
+    # start a list, to be used like a information database
+    InfoDb = []
+
+    # add a row to list, an Info record
+    InfoDb.append({
+        "FirstName": "John",
+        "LastName": "Mortensen",
+        "DOB": "October 21",
+        "Residence": "San Diego",
+        "Email": "jmortensen@powayusd.com",
+        "Owns_Cars": ["2015-Fusion", "2011-Ranger", "2003-Excursion", "1997-F350", "1969-Cadillac"]
+    })
+
+    # add a row to list, an Info record
+    InfoDb.append({
+        "FirstName": "Shane",
+        "LastName": "Lopez",
+        "DOB": "February 27",
+        "Residence": "San Diego",
+        "Email": "slopez@powayusd.com",
+        "Owns_Cars": ["2021-Insight"]
+    })
+    
+    return jsonify(InfoDb)
+
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
