@@ -16,7 +16,7 @@ def carPostImage_base64_decode(post_id, imageName):
 def carPostImage_base64_upload(base64_image, post_id, imageName):
     try:
         image_data = base64.b64decode(base64_image)
-        filename = secure_filename(f'{imageName}')
+        filename = secure_filename(imageName)
         car_post_dir = os.path.join(app.config['UPLOAD_FOLDER'], "carPostImages", f"{post_id}")
         if not os.path.exists(car_post_dir):
             os.makedirs(car_post_dir)
