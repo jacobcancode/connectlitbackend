@@ -47,16 +47,19 @@ class CarPostAPI:
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
             return jsonify(post.read())
         
-        @token_required()
         def get(self):
-            # Obtain the current user
-            current_user = g.current_user
-            # Find all the posts by the current user
-            posts = CarPost.query.filter(CarPost._uid == current_user.id).all()
-            # Prepare a JSON list of all the posts, uses for loop shortcut called list comprehension
-            json_ready = [post.read() for post in posts]
-            # Return a JSON list, converting Python dictionaries to JSON format
-            return jsonify(json_ready)
+            data = request.get_json()
+
+            if "post_id" not in data:
+                return Response("{'message': 'Missing post_id'}", 400)
+            
+            post = CarPost.query.filter(CarPost.id == data["post_id"]).first()
+
+            if post is None:
+                return Response("{'message': 'Post not found'}", 404)
+            
+            # Return response to the client in JSON format, converting Python dictionaries to JSON format
+            return jsonify(post.read())
 
         @token_required()
         def put(self):
