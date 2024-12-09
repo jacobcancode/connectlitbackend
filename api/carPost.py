@@ -37,6 +37,9 @@ class CarPostAPI:
             current_user = g.current_user
             # Obtain the request data sent by the RESTful client API
             data = request.get_json()
+
+            if "title" not in data or "description" not in data or "car_type" not in data or "image_url_table" not in data:
+                return Response("{'message': 'Missing required fields'}", 400)
             # Create a new post object using the data from the request
             post = CarPost(data['title'], data['description'], current_user.id, data['car_type'], data['image_url_table'])
             # Save the post object using the Object Relational Mapper (ORM) method defined in the model
