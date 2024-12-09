@@ -64,6 +64,13 @@ def allPosts(car_type):
     posts = CarPost.query.filter(CarPost._car_type == car_type).all()
     return jsonify([post.read() for post in posts])
 
+@app.route('/api/carPost/postsByUser/<int:user_id>', methods=['GET'])
+def postsByUser(user_id):
+    user = User.query.get(user_id)
+    if user is None:
+        return jsonify({'message': 'User not found'}), 404
+    posts = CarPost.query.filter(CarPost._uid == user_id).all()
+    return jsonify([post.read() for post in posts])
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
 
