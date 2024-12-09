@@ -5,6 +5,9 @@ from datetime import datetime
 from __init__ import app
 from api.jwt_authorize import token_required
 from model.carPost import CarPost
+from model.carPostImage import carPostImage_base64_upload
+import base64
+import json
 
 """
 This Blueprint object is used to define APIs for the Post model.
@@ -40,10 +43,26 @@ class CarPostAPI:
 
             if "title" not in data or "description" not in data or "car_type" not in data or "image_url_table" not in data:
                 return Response("{'message': 'Missing required fields'}", 400)
+
             # Create a new post object using the data from the request
             post = CarPost(data['title'], data['description'], current_user.id, data['car_type'], data['image_url_table'])
             # Save the post object using the Object Relational Mapper (ORM) method defined in the model
             post.create()
+
+            # Convert the image_base64_table to a list of strings
+            image_url_table = []
+            for i in range(len(data['image_base64_table'])):
+                base64_image = data['image_base64_table'][i]["base64"]
+                name = data['image_base64_table'][i]["name"]
+                print(base64_image)
+                carPostImage_base64_upload(base64_image, post.id, name)
+                image_url_table.append(name)
+            post.updateImageTable(image_url_table)
+
+            # for base64_image in data['image_base64_table']:
+            #     print(base64_image)
+            #     carPostImage_base64_upload(base64_image, post.id, )
+
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
             return jsonify(post.read())
         
