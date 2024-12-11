@@ -27,6 +27,8 @@ from api.nestPost import nestPost_api # Justin added this, custom format for his
 from api.messages_api import messages_api # Adi added this, messages for his website
 from api.carChat import car_chat_api
 from api.carPost import carPost_api
+from api.student import student_api
+from api.vin import vin_api
 
 from api.vote import vote_api
 # database Initialization functions
@@ -55,6 +57,8 @@ app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
 app.register_blueprint(carPost_api)
+app.register_blueprint(student_api)
+app.register_blueprint(vin_api)
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
 def allPosts(car_type):
@@ -89,6 +93,33 @@ def getPostImages(post_id):
         images.append(image)
         
     return jsonify(images)
+
+@app.route('/api/data/mort', methods=['GET'])
+def get_data():
+    # start a list, to be used like a information database
+    InfoDb = []
+
+    # add a row to list, an Info record
+    InfoDb.append({
+        "FirstName": "John",
+        "LastName": "Mortensen",
+        "DOB": "October 21",
+        "Residence": "San Diego",
+        "Email": "jmortensen@powayusd.com",
+        "Owns_Cars": ["2015-Fusion", "2011-Ranger", "2003-Excursion", "1997-F350", "1969-Cadillac"]
+    })
+
+    # add a row to list, an Info record
+    InfoDb.append({
+        "FirstName": "Shane",
+        "LastName": "Lopez",
+        "DOB": "February 27",
+        "Residence": "San Diego",
+        "Email": "slopez@powayusd.com",
+        "Owns_Cars": ["2021-Insight"]
+    })
+    
+    return jsonify(InfoDb)
 
 
 # Tell Flask-Login the view function name of your login route
