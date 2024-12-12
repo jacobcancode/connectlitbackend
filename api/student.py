@@ -49,18 +49,33 @@ class StudentAPI:
             # Use the helper method to get Jeff's details
             trevor_details = StudentAPI.get_student("Trevor")
             return jsonify(trevor_details)
+    
+    class _Wyatt(Resource):
+        def get(self):
+            # Use the helper method to get Jeff's details
+            wyatt_details = StudentAPI.get_student("Wyatt")
+            return jsonify(wyatt_details)
+        
+    class _Kush(Resource):
+        def get(self):
+            # Use the helper method to get Jeff's details
+            kush_details = StudentAPI.get_student("Kush")
+            return jsonify(kush_details)
 
     class _Bulk(Resource):
         def get(self):
             # Use the helper method to get both John's and Jeff's details
-            john_details = StudentAPI.get_student("John")
-            jeff_details = StudentAPI.get_student("Jeff")
             gavin_details = StudentAPI.get_student("Gavin")
-            return jsonify({"students": [john_details, jeff_details, gavin_details]})
+            trevor_details = StudentAPI.get_student("Trevor")
+            wyatt_details = StudentAPI.get_student("Wyatt")
+            kush_details = StudentAPI.get_student("Kush")
+            return jsonify({"students": [gavin_details, trevor_details, wyatt_details, kush_details]})
 
     # Building REST API endpoints
     api.add_resource(_Gavin, '/student/gavin')
     api.add_resource(_Trevor, '/student/trevor')
+    api.add_resource(_Wyatt, '/student/wyatt')
+    api.add_resource(_Kush, '/student/kush')
     api.add_resource(_Bulk, '/students')
 
 # Instantiate the StudentAPI to register the endpoints
