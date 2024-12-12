@@ -28,7 +28,7 @@ class CarComments(db.Model):
         Returns:
             str: A text representation of how to create the object.
         """
-        return f"CarComment(id={self.id}, uid={self._uid}, postid={self._postid}, content={self._content}, date_posted={self._date_posted})"
+        return f"CarComment(id={self.id}, uid={self._uid}, post_id={self._post_id}, content={self._content}, date_posted={self._date_posted})"
         
     def create(self):
         """
