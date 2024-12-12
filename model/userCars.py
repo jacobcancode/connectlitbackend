@@ -22,6 +22,6 @@ class UserCars(db.model):
     _top_speed = db.Column(db.String(255), nullable=True) 
 
     def __init__(self, uid, make, model, year, trim, engine_type, color, vin, horsepower, zero_to_sixty, top_speed):
-        if make not in ['audi, apollo, bentley, bmw, bugatti, ferrari, honda, hyundai, jaguar, koenigsegg, lamborghini, lancia, mclaren, mercedes, pagani, porsche, toyota']:
+        if make not in ['audi', 'apollo', 'bentley', 'bmw', 'bugatti', 'dodge', 'ferrari', 'ford', 'honda', 'hyundai', 'jaguar', 'kia', 'koenigsegg', 'lamborghini', 'lancia', 'mclaren', 'mercedes', 'nissan', 'pagani', 'porsche', 'ram', 'scion', 'tesla', 'toyota', 'volkswagen']:
             return {"message": "Bad Make!!"}, 404
 
