@@ -5,7 +5,6 @@ from datetime import datetime
 from __init__ import app
 from api.jwt_authorize import token_required
 from model.carComments import CarComments
-from model.carPostImage import carPostImage_base64_upload
 import base64
 import json
 
