@@ -14,7 +14,7 @@ api = Api(carComments_api)
 
 class CarCommentsAPI:
 
- class _CRUD(Resource):
+    class _CRUD(Resource):
         @token_required()
         def post(self):
             # Obtain the current user from the token required setting in the global context
@@ -74,9 +74,4 @@ class CarCommentsAPI:
             # Return response
             return jsonify({"message": "Post deleted"})
 
-    """
-    Map the _CRUD class to the API endpoints for /post.
-    - The API resource class inherits from flask_restful.Resource.
-    - The _CRUD class defines the HTTP methods for the API.
-    """
-api.add_resource(_CRUD, '/carComment')
+    api.add_resource(_CRUD, '/carComment')
