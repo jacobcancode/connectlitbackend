@@ -1,63 +1,43 @@
-from flask import Blueprint, request, jsonify
-from flask_restful import Api, Resource
-from model.carChat import CarChat
-from __init__ import db
+from flask import Blueprint
+from flask_restful import Resource, reqparse
+from app import db  # Import the db instance
 
-car_chat_api = Blueprint('car_chat_api', __name__, url_prefix='/api')
-api = Api(car_chat_api)
+# Define the ChatMessage model directly in this file
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(255), nullable=False)
 
-class CarChatAPI:
-    class _CRUD(Resource):
-        def post(self):
-            try:
-                # Enhanced error handling
-                data = request.get_json()
-                
-                # Validate input
-                if not data or 'message' not in data:
-                    return jsonify({
-                        'error': 'Invalid input',
-                        'message': 'Message is required'
-                    }), 400
-                
-                # Limit message length
-                if len(data['message']) > 255:
-                    return jsonify({
-                        'error': 'Message too long',
-                        'max_length': 255
-                    }), 400
-                
-                # Create chat message with default user
-                chat = CarChat(data['message'], user_id=1)
-                chat.create()
-                
-                return jsonify(chat.read()), 201
-            
-            except Exception as e:
-                # Comprehensive error logging
-                db.session.rollback()
-                return jsonify({
-                    'error': 'Internal server error',
-                    'message': str(e)
-                }), 500
+    def __repr__(self):
+        return f'<ChatMessage {self.message}>'
 
-        def get(self):
-            try:
-                # More efficient query
-                chats = CarChat.query.order_by(CarChat.id.desc()).limit(50).all()
-                
-                # Use list comprehension
-                allChats = [chat.read() for chat in chats]
-                
-                return jsonify({
-                    'total_chats': len(allChats),
-                    'chats': allChats
-                }), 200
-            
-            except Exception as e:
-                return jsonify({
-                    'error': 'Unable to retrieve chats',
-                    'message': str(e)
-                }), 500
+# Create a Blueprint
+car_chat_bp = Blueprint('car_chat', __name__)
 
-    api.add_resource(_CRUD, '/car_chat')
+class CarChat(Resource):
+    def get(self):
+        messages = ChatMessage.query.all()
+        return [{'id': msg.id, 'message': msg.message} for msg in messages], 200
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('message', required=True, help="Message cannot be blank")
+        args = parser.parse_args()
+
+        new_message = ChatMessage(message=args['message'])
+        db.session.add(new_message)
+        db.session.commit()
+
+        return {'message': f"Received: {args['message']}"}, 201
+
+# Register the resource with the Blueprint
+from flask_restful import Api
+
+api = Api(car_chat_bp)
+api.add_resource(CarChat, '/carchat')
+
+car_chat_api = Blueprint('car_chat', __name__)
+
+@car_chat_api.route('/car_chat', methods=['GET'])
+def some_function():
+    return "Hello from car chat!"
+
