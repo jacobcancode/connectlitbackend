@@ -35,6 +35,7 @@ from api.carComments import carComments_api
 from api.vote import vote_api
 # database Initialization functions
 from model.carChat import CarChat
+from model.mechanicTips import MechanicTip, MechanicTip
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -124,6 +125,37 @@ def get_data():
     })
     
     return jsonify(InfoDb)
+
+@app.route('/add-tip', methods=['POST'])
+def add_tip():
+    data = request.json
+    try:
+        new_tip = MechanicTip(
+            make=data['make'],
+            model=data['model'],
+            year=data['year'],
+            issue=data['issue'],
+            tip=data['tip']
+        )
+        new_tip.create()
+        return jsonify({"message": "Tip added successfully", "tip": new_tip.read()}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route('/get-tip', methods=['GET'])
+def get_tip():
+    make = request.args.get('make')
+    model = request.args.get('model')
+    year = request.args.get('year', type=int)
+    issue = request.args.get('issue')
+    try:
+        tip = MechanicTip.query.filter_by(make=make, model=model, year=year, issue=issue).first()
+        if tip:
+            return jsonify(tip.read()), 200
+        else:
+            return jsonify({"message": "No tip found for the given criteria"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 # Tell Flask-Login the view function name of your login route
