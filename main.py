@@ -65,6 +65,12 @@ app.register_blueprint(vin_api)
 app.register_blueprint(chatbot_api)
 app.register_blueprint(carComments_api)
 
+from api.listings import fetch_listings
+@app.route('/api/fetchListings', methods=['GET'])
+def fetchListings():
+    cars = fetch_listings(21)
+    return jsonify([car for car in cars])
+
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
 def allPosts(car_type):
     if car_type not in ['gas', 'electric', 'hybrid', 'dream']:
