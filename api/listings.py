@@ -26,21 +26,4 @@ def fetch_listings(limit=20):
     
     except:
         raise Exception("Could not send request")
-        
-
     
-# if __name__ == "__main__":
-#     API_KEY = "ZrQEPSkKa3VzaGtzaGFoM0BnbWFpbC5jb20="
-#     #move to a different place
-#     cars = fetch_listings(API_KEY, limit=10)
-#     if cars:
-#         for idx, car in enumerate(cars, start=1):
-#             print(f"Listing {idx}:")
-#             print(f"  Name: {car['name']}")
-#             print(f"  Price: {car['price']}")
-#             print(f"  Type: {car['type']}")
-#             print(f"  Mileage: {car['mileage']}")
-#             print(f"  Photo Link: {car['picture']}")
-#             print()
-#     else:
-#         print("No listings found.")
