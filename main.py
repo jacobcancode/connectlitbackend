@@ -68,7 +68,7 @@ app.register_blueprint(carComments_api)
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
 def fetchListings():
-    cars = fetch_listings(21)
+    cars = fetch_listings(10)
     return jsonify([car for car in cars])
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
