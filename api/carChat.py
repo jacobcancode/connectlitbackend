@@ -1,43 +1,33 @@
 from flask import Blueprint
-from flask_restful import Resource, reqparse
-from app import db  # Import the db instance
+from flask_restful import Resource, reqparse, Api
+from model.carChat import CarChat
+from app import db
 
-# Define the ChatMessage model directly in this file
-class ChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String(255), nullable=False)
-
-    def __repr__(self):
-        return f'<ChatMessage {self.message}>'
-
-# Create a Blueprint
+# Create a single Blueprint
 car_chat_bp = Blueprint('car_chat', __name__)
+api = Api(car_chat_bp)
 
-class CarChat(Resource):
+class CarChatResource(Resource):  # Renamed to avoid confusion with model
     def get(self):
-        messages = ChatMessage.query.all()
-        return [{'id': msg.id, 'message': msg.message} for msg in messages], 200
+        messages = CarChat.query.all()
+        return [msg.read() for msg in messages], 200
 
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('message', required=True, help="Message cannot be blank")
+        parser.add_argument('user_id', type=int, required=True, help="User ID cannot be blank")
         args = parser.parse_args()
 
-        new_message = ChatMessage(message=args['message'])
-        db.session.add(new_message)
-        db.session.commit()
+        new_message = CarChat(
+            message=args['message'],
+            user_id=args['user_id']
+        )
+        try:
+            new_message.create()
+            return new_message.read(), 201
+        except Exception as e:
+            return {'error': str(e)}, 400
 
-        return {'message': f"Received: {args['message']}"}, 201
-
-# Register the resource with the Blueprint
-from flask_restful import Api
-
-api = Api(car_chat_bp)
-api.add_resource(CarChat, '/carchat')
-
-car_chat_api = Blueprint('car_chat', __name__)
-
-@car_chat_api.route('/car_chat', methods=['GET'])
-def some_function():
-    return "Hello from car chat!"
+# Register the resource
+api.add_resource(CarChatResource, '/car_chat')
 
