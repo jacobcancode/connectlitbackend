@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import Column, Integer, String
 from datetime import datetime
 from __init__ import app, db
@@ -13,15 +14,16 @@ class MechanicTip(db.Model):
     _issue = db.Column(db.String(255), nullable=False)
     _tip = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, make, model, year, issue, tip):
-        self.make = make
-        self.model = model
-        self.year = year
-        self.issue = issue
-        self.tip = tip
+    def __init__(self, uid, make, model, year, issue, tip):
+        self._uid = uid  # Store the user id
+        self._make = make
+        self._model = model
+        self._year = year
+        self._issue = issue
+        self._tip = tip
 
     def __repr__(self):
-        return f"MechanicTip(id={self.id}, make='{self.make}', model='{self.model}', year={self.year}, issue='{self.issue}', tip='{self.tip}')"
+        return f"MechanicTip(id={self.id}, make='{self._make}', model='{self._model}', year={self._year}, issue='{self._issue}', tip='{self._tip}')"
 
     def create(self):
         try:
@@ -34,11 +36,10 @@ class MechanicTip(db.Model):
     def read(self):
         return {
             "id": self.id,
-            "make": self.make,
-            "model": self.model,
-            "year": self.year,
-            "issue": self.issue,
-            "tip": self.tip
+            "make": self._make,
+            "model": self._model,
+            "year": self._year,
+            "issue": self._issue,
+            "tip": self._tip
         }
-
 

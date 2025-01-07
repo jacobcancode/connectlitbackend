@@ -136,30 +136,20 @@ def get_data():
 def add_tip():
     data = request.json
     try:
+        # Ensure you get the 'uid' from the request data
+        uid = data['uid']
+        
+        # Create a new mechanic tip and include 'uid'
         new_tip = MechanicTip(
+            uid=uid,  # Pass the user ID (uid) here
             make=data['make'],
             model=data['model'],
             year=data['year'],
             issue=data['issue'],
             tip=data['tip']
         )
-        new_tip.create()
+        new_tip.create()  # Save to the database
         return jsonify({"message": "Tip added successfully", "tip": new_tip.read()}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-@app.route('/get-tip', methods=['GET'])
-def get_tip():
-    make = request.args.get('make')
-    model = request.args.get('model')
-    year = request.args.get('year', type=int)
-    issue = request.args.get('issue')
-    try:
-        tip = MechanicTip.query.filter_by(make=make, model=model, year=year, issue=issue).first()
-        if tip:
-            return jsonify(tip.read()), 200
-        else:
-            return jsonify({"message": "No tip found for the given criteria"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
