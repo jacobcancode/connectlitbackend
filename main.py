@@ -25,7 +25,7 @@ from api.group import group_api
 from api.section import section_api
 from api.nestPost import nestPost_api # Justin added this, custom format for his website
 from api.messages_api import messages_api # Adi added this, messages for his website
-from api.carChat import car_chat_api
+from api.carChat import car_chat_bp
 from api.carPost import carPost_api
 from api.student import student_api
 from api.vin import vin_api
@@ -35,6 +35,7 @@ from api.carComments import carComments_api
 from api.vote import vote_api
 # database Initialization functions
 from model.carChat import CarChat
+from model.mechanicTips import MechanicTip, MechanicTip
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -53,7 +54,7 @@ app.register_blueprint(post_api)
 app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
-app.register_blueprint(car_chat_api)
+app.register_blueprint(car_chat_bp)
 # Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
@@ -63,6 +64,12 @@ app.register_blueprint(student_api)
 app.register_blueprint(vin_api)
 app.register_blueprint(chatbot_api)
 app.register_blueprint(carComments_api)
+
+from api.listings import fetch_listings
+@app.route('/api/fetchListings', methods=['GET'])
+def fetchListings():
+    cars = fetch_listings(10)
+    return jsonify([car for car in cars])
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
 def allPosts(car_type):
@@ -124,6 +131,27 @@ def get_data():
     })
     
     return jsonify(InfoDb)
+
+@app.route('/add-tip', methods=['POST'])
+def add_tip():
+    data = request.json
+    try:
+        # Ensure you get the 'uid' from the request data
+        uid = data['uid']
+        
+        # Create a new mechanic tip and include 'uid'
+        new_tip = MechanicTip(
+            uid=uid,  # Pass the user ID (uid) here
+            make=data['make'],
+            model=data['model'],
+            year=data['year'],
+            issue=data['issue'],
+            tip=data['tip']
+        )
+        new_tip.create()  # Save to the database
+        return jsonify({"message": "Tip added successfully", "tip": new_tip.read()}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 # Tell Flask-Login the view function name of your login route
