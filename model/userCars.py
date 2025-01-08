@@ -10,16 +10,16 @@ class UserCars(db.model):
     __tablename__ = 'userCars'
     id = db.Column(db.Integer, primary_key=True)
     _uid = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    _make = db.Column(db.String(255), nullable=True) 
-    _model = db.Column(db.String(255), nullable=True) 
-    _year = db.Column(db.String(255), nullable=True) 
+    _make = db.Column(db.String(255), nullable=False) 
+    _model = db.Column(db.String(255), nullable=False) 
+    _year = db.Column(db.String(255), nullable=False) 
     _trim = db.Column(db.String(255), nullable=True) 
-    _engine_type = db.Column(db.String(255), nullable=True) 
+    _engine_type = db.Column(db.String(255), nullable=False) 
     _color = db.Column(db.String(255), nullable=True) 
     _vin = db.Column(db.String(255), nullable=True) 
     
 
-    def __init__(self, uid, make, model, year, trim, engine_type, color, vin):
+    def __init__(self, uid, make, model, year, engine_type, trim="", color="", vin=""):
         # if make not in ['audi', 'apollo', 'bentley', 'bmw', 'bugatti', 'dodge', 'ferrari', 'ford', 'honda', 'hyundai', 'jaguar', 'kia', 'koenigsegg', 'lamborghini', 'lancia', 'mclaren', 'mercedes', 'nissan', 'pagani', 'porsche', 'ram', 'scion', 'tesla', 'toyota', 'volkswagen']:
         #     return {"message": "Bad Make!!"}, 404
         self._uid = uid
