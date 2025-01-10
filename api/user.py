@@ -198,6 +198,7 @@ class UserAPI:
                 )
                 return resp
             except Exception as e:
+                print(e)
                 return {
                     "error": "Something went wrong",
                     "message": str(e)

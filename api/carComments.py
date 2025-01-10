@@ -33,18 +33,14 @@ class CarCommentsAPI:
             return jsonify(comment.read())
         
         def get(self):
-            data = request.get_json()
 
-            if "post_id" not in data:
-                return Response("{'message': 'Missing post_id'}", 400)
-            
-            comment = CarComments.query.filter(CarComments._post_id == data["post_id"]).first()
+            comments = CarComments.query.all()
 
-            if comment is None:
+            if comments is None:
                 return Response("{'message': 'Comment not found'}", 404)
             
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
-            return jsonify(comment.read())
+            return jsonify([comment.read() for comment in comments])
 
         @token_required()
         def put(self):
