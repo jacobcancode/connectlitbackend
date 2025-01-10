@@ -5,7 +5,7 @@ from model.user import User
 from model.group import Group
 from datetime import datetime
 
-class UserCars(db.model):
+class UserCars(db.Model):
     
     __tablename__ = 'userCars'
     id = db.Column(db.Integer, primary_key=True)
