@@ -31,6 +31,7 @@ from api.student import student_api
 from api.vin import vin_api
 from api.chatBot import chatbot_api
 from api.carComments import carComments_api
+from api.userCars import userCars_api
 
 from api.vote import vote_api
 # database Initialization functions
@@ -64,6 +65,7 @@ app.register_blueprint(student_api)
 app.register_blueprint(vin_api)
 app.register_blueprint(chatbot_api)
 app.register_blueprint(carComments_api)
+app.register_blueprint(userCars_api)
 
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
