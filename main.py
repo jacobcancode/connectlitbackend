@@ -32,11 +32,13 @@ from api.vin import vin_api
 from api.chatBot import chatbot_api
 from api.carComments import carComments_api
 from api.userCars import userCars_api
+from api.mechanicsTips import mechanicsTips_api
+
 
 from api.vote import vote_api
 # database Initialization functions
 from model.carChat import CarChat
-from model.mechanicTips import MechanicTip, MechanicTip
+from model.mechanicsTips import MechanicsTip
 from model.user import User, initUsers
 from model.section import Section, initSections
 from model.group import Group, initGroups
@@ -66,6 +68,7 @@ app.register_blueprint(vin_api)
 app.register_blueprint(chatbot_api)
 app.register_blueprint(carComments_api)
 app.register_blueprint(userCars_api)
+app.register_blueprint(mechanicsTips_api)
 
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
@@ -134,26 +137,6 @@ def get_data():
     
     return jsonify(InfoDb)
 
-@app.route('/add-tip', methods=['POST'])
-def add_tip():
-    data = request.json
-    try:
-        # Ensure you get the 'uid' from the request data
-        uid = data['uid']
-        
-        # Create a new mechanic tip and include 'uid'
-        new_tip = MechanicTip(
-            uid=uid,  # Pass the user ID (uid) here
-            make=data['make'],
-            model=data['model'],
-            year=data['year'],
-            issue=data['issue'],
-            tip=data['tip']
-        )
-        new_tip.create()  # Save to the database
-        return jsonify({"message": "Tip added successfully", "tip": new_tip.read()}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
 
 # Tell Flask-Login the view function name of your login route
@@ -332,3 +315,23 @@ app.cli.add_command(custom_cli)
 if __name__ == "__main__":
     # change name for testing
     app.run(debug=True, host="0.0.0.0", port="8887")
+
+
+# @app.route('/api/mechanicsTips', methods=['GET'])
+# def get_mechanic_tip():
+#     make = request.args.get('make')
+#     model = request.args.get('model')
+#     year = request.args.get('year')
+#     issue = request.args.get('issue')
+
+#     if not make or not model or not year or not issue:
+#         return jsonify({'message': 'Missing required parameters'}), 400
+
+#     tip = MechanicsTip.query.filter_by(_make=make, _model=model, _year=year, _issue=issue).first()
+
+#     if tip:
+#         return jsonify(tip.read())
+#     else:
+#         return jsonify({'message': 'Tip not found'}), 404
+
+
