@@ -1,7 +1,7 @@
 import requests
 
 def fetch_listings(limit=20):
-    API_KEY = "ZrQEPSkKa3VzaGtzaGFoM0BnbWFpbC5jb20="
+    API_KEY = "ZrQEPSkKa3VzaGtzaGFoM0BnbWFpbC5jb20=" #move to secret file
     url = "https://auto.dev/api/listings"
     headers = {"apikey": API_KEY}
     try:
