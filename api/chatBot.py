@@ -1,21 +1,24 @@
 from flask import Blueprint
 from flask_restful import Api, Resource
 import google.generativeai as genai
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 # Create a Blueprint for the VIN decoding functionality
 chatbot_api = Blueprint('chatbot_api', __name__, url_prefix='/api')
 api = Api(chatbot_api)
 
 # Configure the API key (ensure the API_KEY environment variable is set)
-genai.configure(api_key="AIzaSyAT4rtHzO_yZPA0bCJxiG1fcd4fm2bFgQg")
+genai.configure(api_key=os.getenv('CHATBOT_API_KEY'))
 
 # Create the model with the configuration
 generation_config = {
-    "temperature": 1.15,
+    "temperature": 1.15, # creativity of response
     "top_p": 0.95,
     "top_k": 40,
-    "max_output_tokens": 8192,
+    "max_output_tokens": 8192, # max size of response
     "response_mime_type": "text/plain",
 }
 
