@@ -69,5 +69,63 @@ class VINDecodeAPI:
                 return Response(f"{{'message': 'Database error. User could already have VIN: {str(e)}'}}", status=500, mimetype='application/json')
 
             return jsonify(new_vehicle.read())
+        
+        @token_required()
+        def put(self):
+            # Retrieve the current user from the context
+            current_user = g.current_user
+
+            if not current_user:
+                return jsonify({"message": "User is not authenticated"}), 401
+
+            # Parse the data from the request
+            data = request.get_json()
+            old_vin = data.get('old_vin')  # The current VIN of the vehicle in the database
+            new_vin = data.get('new_vin')  # The new VIN to update to
+
+            # Validate the input
+            if not old_vin or not new_vin:
+                return Response("{'message': 'Both old_vin and new_vin are required'}", status=400, mimetype='application/json')
+
+            if len(new_vin) != 17:
+                return Response("{'message': 'new_vin must be 17 characters long'}", status=400, mimetype='application/json')
+
+            # Find the vehicle by old VIN and ensure it belongs to the current user
+            vehicle = Vehicle.query.filter_by(_vin=old_vin, _uid=current_user.id).first()
+            if not vehicle:
+                return Response("{'message': 'Vehicle not found or does not belong to the user'}", status=404, mimetype='application/json')
+
+            # Fetch updated vehicle information from the NHTSA API
+            response = requests.get(f"{NHTSA_API_URL}{new_vin}?format=json")
+
+            if response.status_code != 200:
+                return Response("{'message': 'Failed to retrieve data from NHTSA API'}", status=500, mimetype='application/json')
+
+            vin_data = response.json().get('Results', [{}])[0]
+
+            # Extract necessary details
+            make = vin_data.get('Make')
+            model = vin_data.get('Model')
+            year = vin_data.get('ModelYear')
+            engine_type = vin_data.get('FuelTypePrimary')
+
+            if not all([make, model, year, engine_type]):
+                return Response("{'message': 'Incomplete data from NHTSA API'}", status=500, mimetype='application/json')
+
+            # Update the vehicle's VIN and other details
+            try:
+                vehicle.vin = new_vin  # Update VIN
+                vehicle._make = make
+                vehicle._model = model
+                vehicle._year = year
+                vehicle._engine_type = engine_type
+
+                db.session.commit()
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                return Response(f"{{'message': 'Database error: {str(e)}'}}", status=500, mimetype='application/json')
+
+            return jsonify({"message": "Vehicle VIN updated successfully", "vehicle": vehicle.read()})
+
 
     api.add_resource(_CRUD, '/vinStore')
