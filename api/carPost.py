@@ -77,13 +77,13 @@ class CarPostAPI:
             if "post_id" not in data:
                 return Response("{'message': 'Missing post_id'}", 400)
             
-            post = CarPost.query.filter(CarPost.id == data["post_id"]).first()
+            posts = CarPost.query.all()
 
-            if post is None:
+            if posts is None:
                 return Response("{'message': 'Post not found'}", 404)
             
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
-            return jsonify(post.read())
+            return jsonify([post.read() for post in posts])
 
         @token_required()
         def put(self):
