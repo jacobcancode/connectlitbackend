@@ -91,7 +91,12 @@ class CarPost(db.Model):
             "id": self.id,
             "title": self._title,
             "description": self._description,
-            "uid": user.id if user else None,
+            "user": {
+                "name": user.read()["name"],
+                "id": user.read()["id"],
+                "email": user.read()["email"],
+                "pfp": user.read()["pfp"]
+            },
             "car_type": self._car_type,
             "image_url_table": self._image_url_table,
             "date_posted": self._date_posted
