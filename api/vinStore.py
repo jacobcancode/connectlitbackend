@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from __init__ import db
 from model.vehicle import Vehicle
 from api.jwt_authorize import token_required
+from model.user import User
 
 # Create a Blueprint for the VIN decoding functionality
 vinStore_api = Blueprint('vinStore_api', __name__, url_prefix='/api')
@@ -70,6 +71,34 @@ class VINDecodeAPI:
 
             return jsonify(new_vehicle.read())
         
+        @token_required()
+        def get(self):
+            """
+            Retrieve vehicles for the current user.
+
+            Retrieves a list of vehicles associated with the authenticated user.
+
+            Returns:
+                JSON response with a list of vehicle dictionaries.
+            """
+            # Retrieve the current user from the token_required authentication check  
+            current_user = g.current_user
+
+            if not current_user:
+                return jsonify({"message": "User is not authenticated"}), 401
+
+            # Query the database for vehicles associated with the current user
+            user_vehicles = Vehicle.query.filter_by(_uid=current_user.id).all()
+
+            if not user_vehicles:
+                return jsonify({"message": "No vehicles found for the current user"}), 404
+
+            # Prepare a JSON list of the user's vehicles
+            json_ready = [vehicle.read() for vehicle in user_vehicles]
+
+            # Return response, a list of the user's vehicles in JSON format
+            return jsonify(json_ready)
+
         @token_required()
         def put(self):
             # Retrieve the current user from the context
