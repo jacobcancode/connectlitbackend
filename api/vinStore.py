@@ -155,6 +155,39 @@ class VINDecodeAPI:
                 return Response(f"{{'message': 'Database error: {str(e)}'}}", status=500, mimetype='application/json')
 
             return jsonify({"message": "Vehicle VIN updated successfully", "vehicle": vehicle.read()})
+        
+        @token_required("Admin")
+        def delete(self):
+            """
+            Delete a vehicle record by VIN.
+            Only users with the 'Admin' role are authorized to delete vehicles.
+
+            Returns:
+                JSON response confirming deletion or an error message.
+            """
+            # Parse and normalize the VIN
+            data = request.get_json()
+            vin = data.get('vin', '').strip().upper()
+
+            if not vin:
+                return Response("{'message': 'VIN is required for deletion'}", status=400, mimetype='application/json')
+
+            # Find the vehicle by VIN (stored as _vin in the database)
+            from sqlalchemy import func
+            vehicle = Vehicle.query.filter(func.upper(Vehicle._vin) == vin).first()
+
+            if not vehicle:
+                return Response(f"{{'message': 'Vehicle with VIN {vin} not found'}}", status=404, mimetype='application/json')
+
+            try:
+                # Delete the vehicle record
+                db.session.delete(vehicle)
+                db.session.commit()
+                return jsonify({"message": f"Vehicle with VIN {vin} has been successfully deleted."})
+            except SQLAlchemyError as e:
+                db.session.rollback()
+                return Response(f"{{'message': 'Database error: {str(e)}'}}", status=500, mimetype='application/json')
+
 
 
     api.add_resource(_CRUD, '/vinStore')
