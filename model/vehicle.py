@@ -1,5 +1,7 @@
 from datetime import datetime
-from __init__ import db
+from sqlalchemy.exc import IntegrityError
+
+from __init__ import app, db
 
 class Vehicle(db.Model):
     __tablename__ = "vehicles"
@@ -71,3 +73,49 @@ class Vehicle(db.Model):
         except Exception as error:
             db.session.rollback()
             raise error
+
+def initVehicles():
+    """
+    Initialize default vehicles and ensure the Vehicle table has valid data before inserting more entries.
+    """
+    with app.app_context():
+        db.create_all()
+
+        # Add default vehicles
+        vehicles = [
+            Vehicle(
+                vin="1HGCM82633A123456",
+                make="Honda",
+                model="Accord",
+                year=2003,
+                engine_type="Gasoline",
+                uid=1  # Replace 'uid' if the field is named something else in your Vehicle model
+            ),
+            Vehicle(
+                vin="1C4RJEBG1KC789101",
+                make="Jeep",
+                model="Grand Cherokee",
+                year=2019,
+                engine_type="Diesel",
+                uid=2
+            ),
+            Vehicle(
+                vin="3VWJP7ATXEM256789",
+                make="Volkswagen",
+                model="Beetle",
+                year=2014,
+                engine_type="Electric",
+                uid=3
+            )
+        ]
+
+        for vehicle in vehicles:
+            try:
+                vehicle.create()  # Assuming you have a `create()` method in your `Vehicle` class
+                print(f"Added vehicle: {vehicle.vin}")
+            except IntegrityError as e:
+                db.session.rollback()
+                print(f"IntegrityError: {e} - Could not add vehicle {vehicle.vin}")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error: {e} - Could not add vehicle {vehicle.vin}")
