@@ -48,7 +48,7 @@ from model.post import Post, initPosts
 from model.nestPost import NestPost, initNestPosts # Justin added this, custom format for his website
 from model.vote import Vote, initVotes
 from model.carPost import CarPost
-from model.vehicle import Vehicle
+from model.vehicle import Vehicle, initVehicles
 from model.listings import UserItem, initDefaultUser
 # server only Views
 
@@ -246,6 +246,7 @@ def generate_data():
     initDefaultUser()
     initUsers()
     initSections()
+    initVehicles()
     initGroups()
     initChannels()
     initPosts()
