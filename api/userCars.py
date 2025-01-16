@@ -96,11 +96,14 @@ class CarPostAPI:
             # Obtain the request data
             data = request.get_json()
             # Find the current car from the database table(s)
-            car = UserCars.query.get(data['car_id'])
+            car = UserCars.query.get(data['id'])
             # Delete the car using the ORM method defined in the model
-            car.delete()
+            if car:
+                car.delete()
             # Return response
-            return jsonify({"message": "Car deleted"})
+                return jsonify({"message": "Car deleted"})
+            else:
+                return Response("{'message': 'Car not found'}", 404)
 
     """
     Map the _CRUD class to the API endpoints for /post.
