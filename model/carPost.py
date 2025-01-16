@@ -28,7 +28,7 @@ class CarPost(db.Model):
     _image_url_table = db.Column(db.String(255), nullable=True)
     _date_posted = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, title, description, uid, car_type, image_url_table):
+    def __init__(self, title, description, uid, car_type, image_url_table, input_datetime=''):
         """
         Constructor, 1st step in object creation.
         
@@ -42,12 +42,18 @@ class CarPost(db.Model):
         if car_type not in ['gas', 'electric', 'hybrid', 'dream']:
             raise ValueError('Car type must be one of gas, electric, hybrid, dream')
         
+        print(uid)
         self._title = title
         self._description = description
         self._uid = uid
         self._car_type = car_type
         self._image_url_table = image_url_table
-        self._date_posted = datetime.now()
+        if not input_datetime:
+            self._date_posted = datetime.now()
+        else:
+            self._date_posted = datetime.fromisoformat(input_datetime)
+        
+        print(self._date_posted)
 
     def __repr__(self):
         """
@@ -108,7 +114,7 @@ class CarPost(db.Model):
         print(self._image_url_table)
         self.update()
     
-    def update(self):
+    def update(self, inputs=None):
         """
         The update method commits the transaction to the database.
         
@@ -118,6 +124,13 @@ class CarPost(db.Model):
         Raises:
             Exception: An error occurred when updating the object in the database.
         """
+        if inputs:
+            self._car_type = inputs.get("car_type", self._car_type)
+            self._image_url_table = inputs.get("image_url_table", self._image_url_table)
+            self._date_posted = datetime.fromisoformat(inputs.get("date_posted", self._date_posted))
+            self._title = inputs.get("title", self._title)
+            self._description = inputs.get("description", self._description)
+            self._uid = inputs.get("uid", self._uid)
         try:
             db.session.commit()
         except Exception as error:
@@ -140,3 +153,16 @@ class CarPost(db.Model):
         except Exception as error:
             db.session.rollback()
             raise error
+        
+    def restore(data):
+        users = {}
+        for carPost_data in data:
+            id = carPost_data.get("id")
+            post = CarPost.query.filter_by(id=id).first()
+            if post:
+                post.update(carPost_data)
+            else:
+                print(carPost_data)
+                post = CarPost(carPost_data.get("title"), carPost_data.get("description"), carPost_data.get("user").get("id"), carPost_data.get("car_type"), carPost_data.get("image_url_table"), carPost_data.get("date_posted"))
+                post.create()
+        return users
