@@ -84,22 +84,6 @@ def initVehicles():
         # Add default vehicles
         vehicles = [
             Vehicle(
-                vin="1HGCM82633A123456",
-                make="Honda",
-                model="Accord",
-                year=2003,
-                engine_type="Gasoline",
-                uid=1  # Replace 'uid' if the field is named something else in your Vehicle model
-            ),
-            Vehicle(
-                vin="1C4RJEBG1KC789101",
-                make="Jeep",
-                model="Grand Cherokee",
-                year=2019,
-                engine_type="Diesel",
-                uid=2
-            ),
-            Vehicle(
                 vin="3VWJP7ATXEM256789",
                 make="Volkswagen",
                 model="Beetle",
