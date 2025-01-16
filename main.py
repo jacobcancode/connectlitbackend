@@ -10,6 +10,7 @@ from flask_login import current_user, login_required
 from flask import current_app
 from werkzeug.security import generate_password_hash
 import shutil
+import datetime
 
 
 
@@ -282,6 +283,9 @@ def save_data_to_json(data, directory='backup'):
         os.makedirs(directory)
     for table, records in data.items():
         with open(os.path.join(directory, f'{table}.json'), 'w') as f:
+            for record in records:
+                if record.get('date_posted'):
+                    record['date_posted'] = record['date_posted'].isoformat()
             json.dump(records, f)
     print(f"Data backed up to {directory} directory.")
 
@@ -301,6 +305,7 @@ def restore_data(data):
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
+        _ = CarPost.restore(data['carPosts'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
