@@ -34,6 +34,7 @@ from api.carComments import carComments_api
 from api.userCars import userCars_api
 from api.mechanicsTips import mechanicsTips_api
 from api.vinStore import vinStore_api
+from api.favorites import itemStore_api
 
 from api.vote import vote_api
 # database Initialization functions
@@ -48,6 +49,7 @@ from model.nestPost import NestPost, initNestPosts # Justin added this, custom f
 from model.vote import Vote, initVotes
 from model.carPost import CarPost
 from model.vehicle import Vehicle
+from model.listings import UserItem
 # server only Views
 
 # register URIs for api endpoints
@@ -71,11 +73,12 @@ app.register_blueprint(carComments_api)
 app.register_blueprint(userCars_api)
 app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
+app.register_blueprint(itemStore_api)
 
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
 def fetchListings():
-    cars = fetch_listings(21)
+    cars = fetch_listings(10)
     return jsonify([car for car in cars])
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])

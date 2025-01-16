@@ -1,7 +1,12 @@
 import requests
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 def fetch_listings(limit=20):
-    API_KEY = "ZrQEPSkKa3VzaGtzaGFoM0BnbWFpbC5jb20=" #move to secret file
+    API_KEY = os.getenv("LISTINGS_API_KEY") #move to secret file
     url = "https://auto.dev/api/listings"
     headers = {"apikey": API_KEY}
     try:
