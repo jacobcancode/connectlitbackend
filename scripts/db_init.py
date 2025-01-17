@@ -24,6 +24,7 @@ General Process outline:
 """
 import shutil
 import sys
+from pathlib import Path
 import os
 
 # Add the directory containing main.py to the Python path
@@ -61,9 +62,6 @@ def main():
                     print("Exiting without making changes.")
                     sys.exit(0)
                     
-            # Backup the old database
-            backup_database(app.config['SQLALCHEMY_DATABASE_URI'], app.config['SQLALCHEMY_BACKUP_URI'])
-           
         except Exception as e:
             print(f"An error occurred: {e}")
             sys.exit(1)
@@ -78,7 +76,7 @@ def main():
             # Create the tables defined in the project
             print("Generating data.")
             generate_data()
-                        
+
     except Exception as e:
         print(f"An error occurred: {e}")
         sys.exit(1)
