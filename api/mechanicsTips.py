@@ -6,7 +6,7 @@ from model.mechanicsTips import MechanicsTip
 from datetime import datetime  # Import datetime
 
 # Create a Blueprint for mechanicsTips
-mechanicsTips_api = Blueprint('mechanicsTips_api', __name__, url_prefix='/api/mechanicsTips')
+mechanicsTips_api = Blueprint('mechanicsTips_api', __name__, url_prefix='/api')
 
 # Initialize the Api object with the Blueprint
 api = Api(mechanicsTips_api)
