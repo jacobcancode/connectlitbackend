@@ -275,6 +275,7 @@ def extract_data():
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
         data['carPosts'] = [post.read() for post in CarPost.query.all()]
+        data['user_items'] = [post.read() for post in UserItem.query.all()]
         data['vehicles'] = [vehicle.read() for vehicle in Vehicle.query.all()]
     return data
 
@@ -288,14 +289,15 @@ def save_data_to_json(data, directory='backup'):
                 if record.get('date_posted'):
                     record['date_posted'] = record['date_posted'].isoformat()
                 if record.get('date_added'):
-                    record['date_added'] = record['date_added'].isoformat()
+                    if type(record['date_added']) != str:
+                        record['date_added'] = record['date_added'].isoformat()
             json.dump(records, f)
     print(f"Data backed up to {directory} directory.")
 
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'carPosts', 'vehicles']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'carPosts', 'user_items', 'vehicles']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -308,6 +310,7 @@ def restore_data(data):
         _ = Group.restore(data['groups'], users)
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
+        _ = UserItem.restore(data['user_items'])
         _ = CarPost.restore(data['carPosts'])
         _ = Vehicle.restore(data['vehicles'])
     print("Data restored to the new database.")
