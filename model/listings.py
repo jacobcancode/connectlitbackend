@@ -80,7 +80,7 @@ def initDefaultUser():
 
             # Default tester data for the UserItem table
             default_items = [
-                UserItem(name='Kush Shah', user_id=1, user_input='2000s Jeep'),
+                UserItem(name='2000s Jeep', user_id=1, user_input='2000s Jeep'),
             ]
 
             # Add default items to the database
