@@ -79,7 +79,7 @@ app.register_blueprint(itemStore_api)
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
 def fetchListings():
-    cars = fetch_listings(10)
+    cars = fetch_listings(2)
     return jsonify([car for car in cars])
 
 @app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
