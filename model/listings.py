@@ -11,19 +11,12 @@ class UserItem(db.Model):
     user_input = db.Column(db.Text, nullable=True)  # Added column to store user input
     date_added = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, name, user_id, user_input=None):
+    def __init__(self, name, user_id, user_input=None, date_added=None):
         self.name = name
         self.user_id = user_id
         self.user_input = user_input
-
-    # Property for name
-    @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        self._name = value
+        if date_added:
+            self.date_added = datetime.fromisoformat(date_added)
 
     def __repr__(self):
         return f"UserItem(id={self.id}, user_id={self.user_id}, name={self.name}, user_input={self.user_input}, date_added={self.date_added})"
@@ -36,16 +29,16 @@ class UserItem(db.Model):
             db.session.rollback()
             raise error
 
-    def to_dict(self):
+    def read(self):
         return {
             "id": self.id,
             "user_id": self.user_id,
             "name": self.name,
             "user_input": self.user_input,
-            "date_added": self.date_added,
+            "date_added": self.date_added.isoformat() if self.date_added else None,
         }
 
-    def update(self, **kwargs):
+    def update(self, data, **kwargs):
         for key, value in kwargs.items():
             if hasattr(self, key) and value is not None:
                 setattr(self, key, value)
@@ -63,6 +56,19 @@ class UserItem(db.Model):
             db.session.rollback()
             raise error
         
+    @staticmethod
+    def restore(data):
+        for post_data in data:
+            _ = post_data.pop('id', None)  # Remove 'id' from post_data
+            name = post_data.get("name", None)
+            post = UserItem.query.filter_by(name=name).first()
+            if post:
+                post.update(post_data)
+            else:
+                post = UserItem(post_data["name"], post_data["user_id"], post_data["user_input"], post_data["date_added"])
+                post.update(post_data)
+                post.create()
+
 def initDefaultUser():
     """
     Initializes the database with default UserItem entries.
@@ -74,7 +80,7 @@ def initDefaultUser():
 
             # Default tester data for the UserItem table
             default_items = [
-                UserItem(name='Kush Shah', user_id=1, user_input='2000s Jeep'),
+                UserItem(name='2000s Jeep', user_id=1, user_input='2000s Jeep'),
             ]
 
             # Add default items to the database

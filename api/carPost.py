@@ -72,11 +72,6 @@ class CarPostAPI:
             return jsonify(post.read())
         
         def get(self):
-            data = request.get_json()
-
-            if "post_id" not in data:
-                return Response("{'message': 'Missing post_id'}", 400)
-            
             posts = CarPost.query.all()
 
             if posts is None:
