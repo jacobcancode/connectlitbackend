@@ -19,7 +19,8 @@ class MechanicsTip(db.Model):
     _tip = db.Column(db.String(1024), nullable=False)
     _date_added = db.Column(db.DateTime, default=datetime.now)
 
-    def __init__(self, make, model, year, issue, tip):
+    def __init__(self, uid, make, model, year, issue, tip):
+        print(uid)
         self._make = make
         self._model = model
         self._year = year
@@ -62,3 +63,4 @@ class MechanicsTip(db.Model):
         except Exception as error:
             db.session.rollback()
             raise error
+

@@ -40,7 +40,7 @@ class UserItemAPI:
             # Check if the item already exists for the user
             existing_item = UserItem.query.filter_by(name=item_name, user_id=current_user.id).first()
             if existing_item:
-                return jsonify({"message": "Item already exists", "item": existing_item.to_dict()})
+                return jsonify({"message": "Item already exists", "item": existing_item.read()})
 
             # Create a new UserItem object
             item_user_input = data.get('user_input')  # Extract user_input from the request
@@ -55,7 +55,7 @@ class UserItemAPI:
                 db.session.rollback()
                 return Response(f"{{'message': 'Database error: {str(e)}'}}", status=500, mimetype='application/json')
 
-            return jsonify(new_item.to_dict())
+            return jsonify(new_item.read())
 
         @token_required()
         def get(self):
@@ -77,7 +77,7 @@ class UserItemAPI:
                 return jsonify({"message": "No items found for the current user"}), 404
 
             # Prepare a JSON list of the user's items
-            json_ready = [item.to_dict() for item in user_items]
+            json_ready = [item.read() for item in user_items]
 
             return jsonify(json_ready)
 
