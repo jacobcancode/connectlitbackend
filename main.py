@@ -51,6 +51,7 @@ from model.vote import Vote, initVotes
 from model.carPost import CarPost
 from model.vehicle import Vehicle, initVehicles
 from model.listings import UserItem, initDefaultUser
+from model.carComments import CarComments
 # server only Views
 
 # register URIs for api endpoints
@@ -275,6 +276,7 @@ def extract_data():
         data['channels'] = [channel.read() for channel in Channel.query.all()]
         data['posts'] = [post.read() for post in Post.query.all()]
         data['carPosts'] = [post.read() for post in CarPost.query.all()]
+        data['carComments'] = [comment.read() for comment in CarComments.query.all()]
     return data
 
 # Save extracted data to JSON files
@@ -292,7 +294,7 @@ def save_data_to_json(data, directory='backup'):
 # Load data from JSON files
 def load_data_from_json(directory='backup'):
     data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'carPosts']:
+    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'carPosts', 'carComments']:
         with open(os.path.join(directory, f'{table}.json'), 'r') as f:
             data[table] = json.load(f)
     return data
@@ -306,6 +308,7 @@ def restore_data(data):
         _ = Channel.restore(data['channels'])
         _ = Post.restore(data['posts'])
         _ = CarPost.restore(data['carPosts'])
+        _ = CarComments.restore(data['carComments'])
     print("Data restored to the new database.")
 
 # Define a command to backup data
