@@ -37,18 +37,13 @@ class MechanicsTipsAPI:
             return jsonify(tip.read())
 
         def get(self):
-            data = request.get_json()
+            tips = MechanicsTip.query.all()
 
-            if "id" not in data:
-                return Response("{'message': 'Missing id'}", 400)
-
-            tip = MechanicsTip.query.get(data['id'])
-
-            if tip is None:
-                return Response("{'message': 'Tip not found'}", 404)
+            if tips is None:
+                return Response("{'message': 'Tips not found'}", 404)
 
             # Return response to the client
-            return jsonify(tip.read())
+            return jsonify([tip.read() for tip in tips])
 
         @token_required()
         def put(self):
