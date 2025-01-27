@@ -108,11 +108,13 @@ class CarPostAPI:
             post = CarPost.query.get(data['id'])
 
             if current_user.id != post.read()['user']['id']:
-                return jsonify({"message": "Post not deleted wrong user"})
+                return jsonify({"message": "Post not deleted wrong user",
+                                "deleted": False})
             # Delete the post using the ORM method defined in the model
             post.delete()
             # Return response
-            return jsonify({"message": "Post deleted"})
+            return jsonify({"message": "Post deleted",
+                            "deleted": True})
 
     """
     Map the _CRUD class to the API endpoints for /post.
