@@ -106,6 +106,9 @@ class CarPostAPI:
             data = request.get_json()
             # Find the current post from the database table(s)
             post = CarPost.query.get(data['id'])
+
+            if current_user.id != post.read()['user']['id']:
+                return jsonify({"message": "Post not deleted wrong user"})
             # Delete the post using the ORM method defined in the model
             post.delete()
             # Return response
