@@ -60,6 +60,30 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         # Return response
         return jsonify({"message": "Message deleted successfully"}), 200
 
+    @token_required()  # Ensure the user is authenticated
+    def put(self):
+        # Obtain the current user
+        current_user = g.current_user
+        # Obtain the request data
+        data = request.get_json()
+        
+        # Find the current message from the database table(s)
+        message = CarChat.query.get(data['id'])
+        
+        if message is None:
+            return jsonify({"error": "Message not found"}), 404
+        
+        # Check if the current user is the owner of the message
+        if message._user_id != current_user.id:
+            return jsonify({"message": "You are not authorized to edit this message"}), 403
+        
+        # Update the message content
+        message._message = data['message']  # Update with new message content
+        message.update()  # Call the update method to save changes
+        
+        # Return response with updated message data
+        return jsonify(message.read()), 200
+
 # Register the resource
 api.add_resource(CarChatResource, '/car_chat')
 
