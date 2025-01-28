@@ -77,6 +77,17 @@ app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 
+
+@app.route('/car_chat/<int:id>', methods=['DELETE'])
+def delete_chat_message(id):
+    message = CarChat.query.get(id)
+    
+    if message:
+        message.delete()  # Call the delete method from the model
+        return jsonify({"message": "Message deleted"}), 200
+    else:
+        return jsonify({"error": "Message not found"}), 404
+
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
 def fetchListings():
