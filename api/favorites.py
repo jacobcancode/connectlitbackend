@@ -57,34 +57,27 @@ class UserItemAPI:
 
             return jsonify(new_item.read())
 
-        @token_required()
         def get(self):
             """
-            Retrieve all items associated with the authenticated user.
+            Retrieve all items associated with the user.
 
             Returns:
                 JSON response with a list of item dictionaries.
             """
-            current_user = g.current_user
-
-            if not current_user:
-                return jsonify({"message": "User is not authenticated"}), 401
-
-            # Query the database for items associated with the current user
-            user_items = UserItem.query.filter_by(user_id=current_user.id).all()
+            # Query the database for items
+            user_items = UserItem.query.all()
 
             if not user_items:
-                return jsonify({"message": "No items found for the current user"}), 404
+                return jsonify({"message": "No items found"}), 404
 
             # Prepare a JSON list of the user's items
             json_ready = [item.read() for item in user_items]
 
             return jsonify(json_ready)
 
-        @token_required()
         def delete(self):
             """
-            Delete an item associated with the authenticated user by name.
+            Delete an item by name.
 
             Request Body:
                 {
@@ -94,21 +87,15 @@ class UserItemAPI:
             Returns:
                 JSON response confirming deletion or an error message.
             """
-            current_user = g.current_user
-
-            if not current_user:
-                return jsonify({"message": "User is not authenticated"}), 401
-
             # Parse the item name from the request
             data = request.get_json()
-            item_name = data.get('name')
 
+            item_name = data.get('name')
             if not item_name:
                 return Response("{'message': 'Item name is required for deletion'}", status=400, mimetype='application/json')
 
-            # Find the item by name and ensure it belongs to the current user
-            item = UserItem.query.filter_by(name=item_name, user_id=current_user.id).first()
-
+            # Find the item by name
+            item = UserItem.query.filter_by(name=item_name).first()
             if not item:
                 return Response(f"{{'message': 'Item with name {item_name} not found'}}", status=404, mimetype='application/json')
 

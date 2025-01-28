@@ -14,11 +14,11 @@ class CarComments(db.Model):
     _date_posted = db.Column(db.DateTime, nullable=False)
 
 
-    def __init__(self, uid, postid, content):
+    def __init__(self, uid, post_id, content, date_posted=None):
         self._uid = uid 
-        self._post_id = postid
+        self._post_id = post_id
         self._content = content
-        self._date_posted = datetime.now()
+        self._date_posted = datetime.fromisoformat(date_posted) if date_posted else datetime.now()
 
     def __repr__(self):
         """
@@ -62,12 +62,13 @@ class CarComments(db.Model):
             "id": self.id,
             "content": self._content,
             "uid": user.id if user else None,
-            "post_id": self._post_id,
+            "postid": self._post_id,
             "date_posted": self._date_posted
         }
         return data
     
-    def update(self):
+    def update(self, data=None):
+        
         """
         The update method commits the transaction to the database.
         
@@ -77,6 +78,12 @@ class CarComments(db.Model):
         Raises:
             Exception: An error occurred when updating the object in the database.
         """
+
+        if data:
+            self._content = data.get("content", self._content)
+            self._uid = data.get("uid", self._uid)
+            self._date_posted = datetime.fromisoformat(data.get("date_posted", self._date_posted))
+            self._post_id = data.get("postid", self._post_id)
         try:
             db.session.commit()
         except Exception as error:
@@ -99,3 +106,16 @@ class CarComments(db.Model):
         except Exception as error:
             db.session.rollback()
             raise error
+        
+    @staticmethod
+    def restore(data):
+        users = {}
+        for carComment_data in data:
+            id = carComment_data.get("id")
+            comment = CarComments.query.filter_by(id=id).first()
+            if comment:
+                comment.update(carComment_data)
+            else:
+                comment = CarComments(carComment_data.get("uid"), carComment_data.get("postid"), carComment_data.get("content"), carComment_data.get("date_posted"))
+                comment.create()
+        return users
