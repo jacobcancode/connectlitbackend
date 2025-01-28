@@ -53,20 +53,29 @@ class CarPostAPI:
 
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
             return jsonify(post.read())
-        
+        @token_required
         def get(self):
-            data = request.get_json()
+            print("Hello")
+            # """
+            # Retrieve all cars associated with the authenticated user.
 
-            if "car_id" not in data:
-                return Response("{'message': 'Missing car_id'}", 400)
-            
-            car = UserCars.query.filter(UserCars.id == data["car_id"]).first()
+            # Returns:
+            #     JSON response with a list of car dictionaries.
+            # """
+            # current_user = g.current_user
 
-            if car is None:
-                return Response("{'message': 'Car not found'}", 404)
-            
-            # Return response to the client in JSON format, converting Python dictionaries to JSON format
-            return jsonify(car.read())
+            # if not current_user:
+            #     return jsonify({"message": "User is not authenticated"}), 401
+            # # Query the database for cars associated with the current user
+            # user_cars = UserCars.query.filter_by(_uid=current_user.id).all()
+            # print(user_cars)
+            # if not user_cars:
+            #     return jsonify({"message": "No cars found for the current user"}), 404
+            # print(user_cars[0].read())
+            # # Prepare a JSON list of the user's cars
+            # # json_ready = [car.read() for car in user_cars]
+
+            return jsonify({"message": "HI"})
 
         @token_required()
         def put(self):
