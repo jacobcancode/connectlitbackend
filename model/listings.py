@@ -38,10 +38,8 @@ class UserItem(db.Model):
             "date_added": self.date_added.isoformat() if self.date_added else None,
         }
 
-    def update(self, data, **kwargs):
-        for key, value in kwargs.items():
-            if hasattr(self, key) and value is not None:
-                setattr(self, key, value)
+    def update(self, user_input):
+        self.user_input = user_input
         try:
             db.session.commit()
         except Exception as error:
@@ -80,7 +78,7 @@ def initDefaultUser():
 
             # Default tester data for the UserItem table
             default_items = [
-                UserItem(name='2000s Jeep', user_id=1, ),
+                UserItem(name='2000s Jeep', user_id=1, user_input="Great for off roading!"),
             ]
 
             # Add default items to the database

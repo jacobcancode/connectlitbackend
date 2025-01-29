@@ -94,3 +94,24 @@ class CarChat(db.Model):
         except Exception as error:
             db.session.rollback()
             raise error
+
+    @staticmethod
+    def restore(data):
+        users = {}
+        for chat_data in data:
+            id = chat_data.get("id")
+            message = CarChat.query.filter_by(id=id).first()
+            if message:
+                # Update existing message
+                message._message = chat_data.get("message", message._message)
+                message._user_id = chat_data.get("user_id", message._user_id)
+                message._timestamp = datetime.fromisoformat(chat_data.get("timestamp", message._timestamp.isoformat()))
+                message.update()  # Call the update method to save changes
+            else:
+                # Create a new message
+                new_message = CarChat(
+                    message=chat_data.get("message"),
+                    user_id=chat_data.get("user_id")
+                )
+                new_message.create()  # Call the create method to save the new message
+        return users
