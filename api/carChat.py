@@ -60,7 +60,7 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         # Return response
         return jsonify({"message": "Message deleted successfully"}), 200
 
-    @token_required()  # Ensure the user is authenticated
+  # Ensure the user is authenticated
     def put(self):
         # Obtain the current user
         current_user = g.current_user
