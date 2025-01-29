@@ -77,6 +77,30 @@ app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 
+@app.route('/car_chat/<int:id>', methods=['PUT'])
+def edit_chat_message(id):
+    data = request.get_json()  # Get the JSON data from the request
+    message = CarChat.query.get(id)  # Find the message by ID
+    
+    if message is None:
+        return jsonify({"error": "Message not found"}), 404  # Return 404 if message doesn't exist
+    
+    # Update the message content
+    message._message = data.get('message', message._message)  # Update with new message content
+    message.update()  # Call the update method from the model
+    
+    return jsonify(message.read()), 200  # Return the updated message data
+
+@app.route('/car_chat/<int:id>', methods=['DELETE'])
+def delete_chat_message(id):
+    message = CarChat.query.get(id)
+    
+    if message:
+        message.delete()  # Call the delete method from the model
+        return jsonify({"message": "Message deleted"}), 200
+    else:
+        return jsonify({"error": "Message not found"}), 404
+
 from api.listings import fetch_listings
 @app.route('/api/fetchListings', methods=['GET'])
 def fetchListings():

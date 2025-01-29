@@ -74,7 +74,23 @@ class UserItemAPI:
             json_ready = [item.read() for item in user_items]
 
             return jsonify(json_ready)
-
+        
+        
+        @token_required()
+        def put(self):
+            # Obtain the current user
+            current_user = g.current_user
+            # Obtain the request data
+            data = request.get_json()
+            # Find the current post from the database table(s)
+            user_item = UserItem.query.get(data['id'])
+            # Update the post
+            user_item.user_input= data['user_input']
+            # Save the post
+            user_item.update(data['user_input'])
+            # Return response
+            return jsonify(user_item.read())
+            
         def delete(self):
             """
             Delete an item by name.
