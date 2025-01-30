@@ -94,6 +94,9 @@ class CarPostAPI:
             data = request.get_json()
             # Find the current car from the database table(s)
             car = UserCars.query.get(data['id'])
+
+            if car._uid != current_user.id:
+                return Response("{'message': 'Unauthorized'}", 401)
             # Delete the car using the ORM method defined in the model
             if car:
                 car.delete()
