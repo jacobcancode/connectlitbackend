@@ -16,8 +16,9 @@ class MechanicsTip(db.Model):
     _model = db.Column(db.String(255), nullable=False)
     _year = db.Column(db.String(255), nullable=False)
     _issue = db.Column(db.String(255), nullable=False)
-    _tip = db.Column(db.String(1024), nullable=False)
+    _tip = db.Column(db.String(1024), nullable=True)
     _date_added = db.Column(db.DateTime, default=datetime.now)
+
 
     def __init__(self, uid, make, model, year, issue, tip):
         print(uid)
