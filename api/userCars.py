@@ -95,6 +95,9 @@ class CarPostAPI:
             # Find the current car from the database table(s)
             car = UserCars.query.get(data['id'])
 
+            if car is None:
+                return Response("{'message': 'Car not found'}", 404)
+
             if car._uid != current_user.id:
                 return Response("{'message': 'Unauthorized'}", 401)
             # Delete the car using the ORM method defined in the model
