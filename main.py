@@ -273,11 +273,6 @@ def generate_data():
     initUsers()
     initSections()
     initVehicles()
-    initGroups()
-    initChannels()
-    initPosts()
-    initNestPosts()
-    initVotes()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
