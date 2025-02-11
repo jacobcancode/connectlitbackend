@@ -9,7 +9,6 @@ COPY . /
 
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install gunicorn
-RUN ./scripts/db_init.py
 
 ENV GUNICORN_CMD_ARGS="--workers=3 --bind=0.0.0.0:8104"
 
@@ -19,3 +18,5 @@ EXPOSE 8104
 ENV FLASK_ENV=production
 
 CMD [ "gunicorn", "main:app" ]
+
+RUN ./scripts/db_init.py
