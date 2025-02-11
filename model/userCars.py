@@ -17,9 +17,10 @@ class UserCars(db.Model):
     _engine_type = db.Column(db.String(255), nullable=False) 
     _color = db.Column(db.String(255), nullable=True) 
     _vin = db.Column(db.String(255), nullable=True) 
+    _image = db.Column(db.String(255), nullable=True) 
     
 
-    def __init__(self, uid, make, model, year, engine_type, trim="", color="", vin=""):
+    def __init__(self, uid, make, model, year, engine_type, trim="", color="", vin="", image=""):
         # if make not in ['audi', 'apollo', 'bentley', 'bmw', 'bugatti', 'dodge', 'ferrari', 'ford', 'honda', 'hyundai', 'jaguar', 'kia', 'koenigsegg', 'lamborghini', 'lancia', 'mclaren', 'mercedes', 'nissan', 'pagani', 'porsche', 'ram', 'scion', 'tesla', 'toyota', 'volkswagen']:
         #     return {"message": "Bad Make!!"}, 404
         self._uid = uid
@@ -30,6 +31,8 @@ class UserCars(db.Model):
         self._year = year
         self._trim = trim
         self._vin = vin
+        self._image = image
+
 
     def __repr__(self):
         """
@@ -79,6 +82,7 @@ class UserCars(db.Model):
             "color": self._color,
             "engine_type": self._engine_type,
             "vin": self._vin,
+            "image": self._image,
         }
         return data
     
