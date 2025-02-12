@@ -23,7 +23,7 @@ class VINDecodeAPI:
 
             # Check if the current user is authenticated
             if not current_user:
-                return jsonify({"message": "User is not authenticated"}), 401
+                return Response("{'message': 'User is not authenticated'}", 401)
 
             # Parse the VIN from the request
             data = request.get_json()
@@ -85,13 +85,13 @@ class VINDecodeAPI:
             current_user = g.current_user
 
             if not current_user:
-                return jsonify({"message": "User is not authenticated"}), 401
+                return Response("{'message': 'User is not authenticated'}", 401)
 
             # Query the database for vehicles associated with the current user
             user_vehicles = Vehicle.query.filter_by(_uid=current_user.id).all()
 
             if not user_vehicles:
-                return jsonify({"message": "No vehicles found for the current user"}), 404
+                return Response("{'message': 'No vehicles found for the current user'}", 404)
 
             # Prepare a JSON list of the user's vehicles
             json_ready = [vehicle.read() for vehicle in user_vehicles]
