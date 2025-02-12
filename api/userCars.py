@@ -43,7 +43,7 @@ class CarPostAPI:
                 return Response("{'message': 'Missing required fields'}", 400)
 
             # Create a new post object using the data from the request
-            post = UserCars(current_user.id, data["make"], data["model"], data["year"], data["engine_type"], data["trim"], data["color"], data["vin"], data["image"]) 
+            post = UserCars(current_user.id, data["make"], data["model"], data["year"], data["engine_type"], data["trim"], data["color"], data["vin"]) 
             # Save the post object using the Object Relational Mapper (ORM) method defined in the model
             post.create()
 
@@ -81,7 +81,6 @@ class CarPostAPI:
             car._year = data["year"]
             car._trim = data["trim"]
             car._vin = data["vin"]
-            car._image = data["image"]
             # Save the car
             car.update()
             # Return response
