@@ -76,7 +76,7 @@ class CarPostAPI:
 
             if posts is None:
                 return Response("{'message': 'Post not found'}", 404)
-            
+                                                                                                                                                               
             # Return response to the client in JSON format, converting Python dictionaries to JSON format
             return jsonify([post.read() for post in posts])
 
@@ -106,6 +106,11 @@ class CarPostAPI:
             data = request.get_json()
             # Find the current post from the database table(s)
             post = CarPost.query.get(data['id'])
+
+            if current_user._role == "Admin":
+                post.delete()
+                return jsonify({"message": "Post deleted",
+                            "deleted": True})
 
             if current_user.id != post.read()['user']['id']:
                 return jsonify({"message": "Post not deleted wrong user",
