@@ -3,8 +3,8 @@ from datetime import datetime
 from __init__ import app, db
 from model.user import User
 
-class CarChat(db.Model):
-    __tablename__ = 'carChats'
+class carChat(db.Model):
+    __tablename__ = 'carChat'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     _message = db.Column(db.String(255), nullable=False)
@@ -100,7 +100,7 @@ class CarChat(db.Model):
         users = {}
         for chat_data in data:
             id = chat_data.get("id")
-            message = CarChat.query.filter_by(id=id).first()
+            message = carChat.query.filter_by(id=id).first()
             if message:
                 # Update existing message
                 message._message = chat_data.get("message", message._message)
@@ -109,7 +109,7 @@ class CarChat(db.Model):
                 message.update()  # Call the update method to save changes
             else:
                 # Create a new message
-                new_message = CarChat(
+                new_message = carChat(
                     message=chat_data.get("message"),
                     user_id=chat_data.get("user_id")
                 )
