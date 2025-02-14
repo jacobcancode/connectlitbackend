@@ -2,11 +2,11 @@ import jwt
 from flask import Blueprint, request, jsonify, current_app, Response, g
 from flask_restful import Api, Resource  # used for REST API building
 from flask import Blueprint
+from __init__ import app
 from flask_restful import Resource, reqparse, Api
 from model.carChat import carChat
 from app import db
 from api.jwt_authorize import token_required
-from model.carComments import CarComments
 import base64
 import json
 
@@ -20,15 +20,20 @@ class carChatResource(Resource):  # Renamed to avoid confusion with model
         messages = carChat.query.all()
         return [msg.read() for msg in messages], 200
 
+    @token_required()
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('message', required=True, help="Message cannot be blank")
-        parser.add_argument('user_id', type=int, required=True, help="User ID cannot be blank")
+        # parser.add_argument('user_id', type=int, required=True, help="User ID cannot be blank")
+        
+        
         args = parser.parse_args()
+
+        current_user = g.current_user
 
         new_message = carChat(
             message=args['message'],
-            user_id=args['user_id']
+            user_id=current_user.id
         )
         try:
             new_message.create()
@@ -58,7 +63,7 @@ class carChatResource(Resource):  # Renamed to avoid confusion with model
         message.delete()
         
         # Return response
-        return jsonify({"message": "Message deleted successfully"}), 200
+        return 201
 
   # Ensure the user is authenticated
     def put(self):
@@ -84,6 +89,6 @@ class carChatResource(Resource):  # Renamed to avoid confusion with model
         # Return response with updated message data
         return jsonify(message.read()), 200
 
-# Register the resource
-api.add_resource(carChatResource, '/car_chat')
+
+api.add_resource(carChatResource, '/carChat')
 

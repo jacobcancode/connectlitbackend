@@ -1,7 +1,9 @@
 from sqlite3 import IntegrityError
-from datetime import datetime
+from sqlalchemy import Text
 from __init__ import app, db
 from model.user import User
+from model.group import Group
+from datetime import datetime
 
 class carChat(db.Model):
     __tablename__ = 'carChat'
