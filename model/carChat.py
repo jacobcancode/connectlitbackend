@@ -6,7 +6,7 @@ from model.group import Group
 from datetime import datetime
 
 class carChat(db.Model):
-    __tablename__ = 'carChat'
+    __tablename__ = 'carChats'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     _message = db.Column(db.String(255), nullable=False)
