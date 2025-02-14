@@ -26,7 +26,7 @@ from api.group import group_api
 from api.section import section_api
 from api.nestPost import nestPost_api # Justin added this, custom format for his website
 from api.messages_api import messages_api # Adi added this, messages for his website
-from api.carChat import car_chat_bp
+from api.carChat import carChat_api
 from api.carPost import carPost_api
 from api.student import student_api
 from api.vin import vin_api
@@ -39,7 +39,7 @@ from api.favorites import itemStore_api
 
 from api.vote import vote_api
 # database Initialization functions
-from model.carChat import CarChat
+from model.carChat import carChat
 from model.mechanicsTips import MechanicsTip
 from model.user import User, initUsers
 from model.section import Section, initSections
@@ -62,7 +62,7 @@ app.register_blueprint(post_api)
 app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
-app.register_blueprint(car_chat_bp)
+app.register_blueprint(carChat_api)
 # Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
@@ -80,7 +80,7 @@ app.register_blueprint(itemStore_api)
 @app.route('/car_chat/<int:id>', methods=['PUT'])
 def edit_chat_message(id):
     data = request.get_json()  # Get the JSON data from the request
-    message = CarChat.query.get(id)  # Find the message by ID
+    message = carChat.query.get(id)  # Find the message by ID
     
     if message is None:
         return jsonify({"error": "Message not found"}), 404  # Return 404 if message doesn't exist
@@ -93,7 +93,7 @@ def edit_chat_message(id):
 
 @app.route('/car_chat/<int:id>', methods=['DELETE'])
 def delete_chat_message(id):
-    message = CarChat.query.get(id)
+    message = carChat.query.get(id)
     
     if message:
         message.delete()  # Call the delete method from the model
