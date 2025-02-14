@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, current_app, Response, g
 from flask_restful import Api, Resource  # used for REST API building
 from flask import Blueprint
 from flask_restful import Resource, reqparse, Api
-from model.carChat import CarChat
+from model.carChat import carChat
 from app import db
 from api.jwt_authorize import token_required
 from model.carComments import CarComments
@@ -12,12 +12,12 @@ import json
 
 
 # Create a single Blueprint
-car_chat_bp = Blueprint('car_chat', __name__)
-api = Api(car_chat_bp)
+carChat_api = Blueprint('carChat_api', __name__, url_prefix='/api')
+api = Api(carChat_api)
 
-class CarChatResource(Resource):  # Renamed to avoid confusion with model
+class carChatResource(Resource):  # Renamed to avoid confusion with model
     def get(self):
-        messages = CarChat.query.all()
+        messages = carChat.query.all()
         return [msg.read() for msg in messages], 200
 
     def post(self):
@@ -26,7 +26,7 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         parser.add_argument('user_id', type=int, required=True, help="User ID cannot be blank")
         args = parser.parse_args()
 
-        new_message = CarChat(
+        new_message = carChat(
             message=args['message'],
             user_id=args['user_id']
         )
@@ -45,7 +45,7 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         data = request.get_json()
         
         # Find the current message from the database table(s)
-        message = CarChat.query.get(data['id'])
+        message = carChat.query.get(data['id'])
         
         if message is None:
             return jsonify({"error": "Message not found"}), 404
@@ -68,7 +68,7 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         data = request.get_json()
         
         # Find the current message from the database table(s)
-        message = CarChat.query.get(data['id'])
+        message = carChat.query.get(data['id'])
         
         if message is None:
             return jsonify({"error": "Message not found"}), 404
@@ -85,5 +85,5 @@ class CarChatResource(Resource):  # Renamed to avoid confusion with model
         return jsonify(message.read()), 200
 
 # Register the resource
-api.add_resource(CarChatResource, '/car_chat')
+api.add_resource(carChatResource, '/car_chat')
 
