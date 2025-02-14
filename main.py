@@ -77,7 +77,7 @@ app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 
-@app.route('/car_chat/<int:id>', methods=['PUT'])
+@app.route('/carChat/<int:id>', methods=['PUT'])
 def edit_chat_message(id):
     data = request.get_json()  # Get the JSON data from the request
     message = carChat.query.get(id)  # Find the message by ID
@@ -91,7 +91,7 @@ def edit_chat_message(id):
     
     return jsonify(message.read()), 200  # Return the updated message data
 
-@app.route('/car_chat/<int:id>', methods=['DELETE'])
+@app.route('/carChat/<int:id>', methods=['DELETE'])
 def delete_chat_message(id):
     message = carChat.query.get(id)
     
