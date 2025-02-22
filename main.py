@@ -77,6 +77,13 @@ app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 
+@app.route('/carPosts')
+@login_required  # Ensure that only logged-in users can access this page
+def carPosts():
+    carPost_data = CarPost.query.all()  # Fetch all car posts from the database
+    print("Car Post Data:", carPost_data)  # Debugging line to check if data is fetched
+    return render_template("carPosts.html", carPost_data=carPost_data)
+
 @app.route('/carChat/<int:id>', methods=['PUT'])
 def edit_chat_message(id):
     data = request.get_json()  # Get the JSON data from the request
