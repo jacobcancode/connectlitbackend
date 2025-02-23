@@ -8,8 +8,10 @@
             <tr>
                 <th>ID</th>
                 <th>Title</th>
+                <th>Car Type</th>
+                <th>Description</th>
                 <th>Author ID</th>
-                {% if current_user.role == 'Admin' %}
+                <!--{% if current_user.role == 'Admin' %}-->
                 <th>Actions</th>
                 {% endif %}
             </tr>
@@ -18,11 +20,17 @@
             {% for carPost in carPost_data %}
             <tr>
                 <td>{{ carPost.id }}</td>
-                <td>{{ carPost.title }}</td>
-                <td>{{ carPost.user_id }}</td>
-                {% if current_user.role == 'Admin' %}
+                <td>{{ carPost._title }}</td>
+                <td>{{ carPost._car_type }}</td>
+                <td>{{ carPost._description }}</td>
+                <td>{{ carPost._uid }}</td>
+                <!--{% if current_user.role == 'Admin' %}-->
                 <td>
-                    <button class="btn btn-warning edit-btn" data-id="{{ carPost.id }}" data-title="{{ carPost.title }}">Edit</button>
+                    <button class="btn btn-warning edit-btn" 
+                            data-id="{{ carPost.id }}" 
+                            data-title="{{ carPost._title }}" 
+                            data-car-type="{{ carPost._car_type }}" 
+                            data-description="{{ carPost._description }}">Edit</button>
                     <button class="btn btn-danger delete-btn" data-id="{{ carPost.id }}">Delete</button>
                 </td>                
                 {% endif %}
@@ -31,7 +39,7 @@
         </tbody>
     </table>
 
-    {% if current_user.role == 'Admin' %}
+    <!--{% if current_user.role == 'Admin' %}-->
     <script>
         $(document).ready(function() {
             $("#carPostTable").DataTable(); // Initialize DataTable for better UI
@@ -62,9 +70,13 @@
             $(document).on("click", ".edit-btn", function() {
                 var carPostId = $(this).data("id");
                 var title = $(this).data("title");
+                var carType = $(this).data("car-type");
+                var description = $(this).data("description");
 
                 $("#editCarPostModal #editCarPostId").val(carPostId);
                 $("#editCarPostModal #editTitle").val(title);
+                $("#editCarPostModal #editCarType").val(carType);
+                $("#editCarPostModal #editDescription").val(description);
                 $("#editCarPostModal").modal("show");
             });
 
@@ -72,25 +84,35 @@
             $("#saveChanges").click(function() {
                 var carPostId = $("#editCarPostId").val();
                 var updatedTitle = $("#editTitle").val();
+                var updatedCarType = $("#editCarType").val();
+                var updatedDescription = $("#editDescription").val();
 
                 fetch("/api/carPost", {
                     method: "PUT",  // Your API expects PUT request to update
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         id: carPostId,
-                        title: updatedTitle
+                        title: updatedTitle,
+                        car_type: updatedCarType,
+                        description: updatedDescription
                     })
                 })
-                .then(response => response.json().then(data => ({ status: response.status, body: data })))
                 .then(response => {
-                    if (response.status === 200) {
-                        alert(response.body.message);
-                        location.reload();
-                    } else {
-                        alert(response.body.error || "Failed to update car post.");
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Failed to update car post.'); // Handle error response
+                        });
                     }
+                    return response.json(); // Parse the JSON response if successful
                 })
-                .catch(error => console.error('Error:', error));
+                .then(data => {
+                    alert(data.message); // Use the message from the successful response
+                    location.reload(); // Reload the page to see updated data
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred: ' + error.message); // Display a user-friendly error message
+                });
             });
         });
     </script>
@@ -110,6 +132,14 @@
                     <div class="form-group">
                         <label for="editTitle">Title</label>
                         <input type="text" class="form-control" id="editTitle">
+                    </div>
+                    <div class="form-group">
+                        <label for="editCarType">Car Type</label>
+                        <input type="text" class="form-control" id="editCarType">
+                    </div>
+                    <div class="form-group">
+                        <label for="editDescription">Description</label>
+                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

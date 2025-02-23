@@ -92,7 +92,7 @@ class CarPostAPI:
             post._title = data['title']
             post._description = data['description']
             post._car_type = data['car_type']
-            post._image_url_table = data['image_url_table']
+            #post._image_url_table = data['image_url_table']
             # Save the post
             post.update()
             # Return response
