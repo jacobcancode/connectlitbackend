@@ -13,7 +13,9 @@
                 <th>Issue</th>
                 <th>Tip</th>
                 <th>Date Added</th>
+                {% if current_user.role == 'Admin' %}
                 <th>Actions</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -26,21 +28,28 @@
                 <td>{{ tip._issue }}</td>
                 <td>{{ tip._tip }}</td>
                 <td>{{ tip._date_added }}</td>
+                {% if current_user.role == 'Admin' %}
                 <td>
                     <button class="btn btn-warning edit-btn" 
-                            data-id="{{ tip.id }}" 
-                            data-make="{{ tip.make }}"
-                            data-model="{{ tip.model }}"
-                            data-year="{{ tip.year }}"
-                            data-issue="{{ tip.issue }}"
-                            data-tip="{{ tip.tip }}">Edit</button>
-                    <button class="btn btn-danger delete-btn" data-id="{{ tip.id }}">Delete</button>
+                            data-id="{{ tip.id }}"
+                            data-make="{{ tip._make }}"
+                            data-model="{{ tip._model }}"
+                            data-year="{{ tip._year }}"
+                            data-issue="{{ tip._issue }}"
+                            data-tip="{{ tip._tip }}">
+                        Edit
+                    </button>
+                    <button class="btn btn-danger delete-btn" data-id="{{ tip.id }}">
+                        Delete
+                    </button>
                 </td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
+    {% if current_user.role == 'Admin' %}
     <script>
         $(document).ready(function() {
             $("#mechanicsTipsTable").DataTable(); // Initialize DataTable for better UI
@@ -49,21 +58,21 @@
             $(document).on("click", ".delete-btn", function() {
                 var tipId = $(this).data("id");
                 if (confirm("Are you sure you want to delete this tip?")) {
-                    const token = localStorage.getItem("token");
                     fetch("/api/mechanicsTips", {
                         method: "DELETE",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
-                        },
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ id: tipId })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message);
-                        location.reload();
+                    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                    .then(response => {
+                        if (response.status === 200) {
+                            alert(response.body.message);
+                            location.reload();
+                        } else {
+                            alert(response.body.error || "Failed to delete tip.");
+                        }
                     })
-                    .catch(error => console.error("Error:", error));
+                    .catch(error => console.error('Error:', error));
                 }
             });
 
@@ -74,33 +83,29 @@
                 var model = $(this).data("model");
                 var year = $(this).data("year");
                 var issue = $(this).data("issue");
-                var tipContent = $(this).data("tip");
+                var tipText = $(this).data("tip");
 
                 $("#editTipModal #editTipId").val(tipId);
-                $("#editTipModal #editTipMake").val(make);
-                $("#editTipModal #editTipModel").val(model);
-                $("#editTipModal #editTipYear").val(year);
-                $("#editTipModal #editTipIssue").val(issue);
-                $("#editTipModal #editTipContent").val(tipContent);
+                $("#editTipModal #editMake").val(make);
+                $("#editTipModal #editModel").val(model);
+                $("#editTipModal #editYear").val(year);
+                $("#editTipModal #editIssue").val(issue);
+                $("#editTipModal #editTip").val(tipText);
                 $("#editTipModal").modal("show");
             });
 
             // Update mechanics tip
             $("#saveTipChanges").click(function() {
                 var tipId = $("#editTipId").val();
-                var updatedMake = $("#editTipMake").val();
-                var updatedModel = $("#editTipModel").val();
-                var updatedYear = $("#editTipYear").val();
-                var updatedIssue = $("#editTipIssue").val();
-                var updatedTip = $("#editTipContent").val();
-                const token = localStorage.getItem("token");
+                var updatedMake = $("#editMake").val();
+                var updatedModel = $("#editModel").val();
+                var updatedYear = $("#editYear").val();
+                var updatedIssue = $("#editIssue").val();
+                var updatedTip = $("#editTip").val();
 
                 fetch("/api/mechanicsTips", {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         id: tipId,
                         make: updatedMake,
@@ -110,12 +115,22 @@
                         tip: updatedTip
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Failed to update tip.');
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    alert("Tip updated successfully!");
+                    alert(data.message);
                     location.reload();
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred: ' + error.message);
+                });
             });
         });
     </script>
@@ -133,24 +148,24 @@
                 <div class="modal-body">
                     <input type="hidden" id="editTipId">
                     <div class="form-group">
-                        <label for="editTipMake">Make</label>
-                        <input type="text" class="form-control" id="editTipMake">
+                        <label for="editMake">Make</label>
+                        <input type="text" class="form-control" id="editMake">
                     </div>
                     <div class="form-group">
-                        <label for="editTipModel">Model</label>
-                        <input type="text" class="form-control" id="editTipModel">
+                        <label for="editModel">Model</label>
+                        <input type="text" class="form-control" id="editModel">
                     </div>
                     <div class="form-group">
-                        <label for="editTipYear">Year</label>
-                        <input type="text" class="form-control" id="editTipYear">
+                        <label for="editYear">Year</label>
+                        <input type="text" class="form-control" id="editYear">
                     </div>
                     <div class="form-group">
-                        <label for="editTipIssue">Issue</label>
-                        <input type="text" class="form-control" id="editTipIssue">
+                        <label for="editIssue">Issue</label>
+                        <input type="text" class="form-control" id="editIssue">
                     </div>
                     <div class="form-group">
-                        <label for="editTipContent">Tip</label>
-                        <textarea class="form-control" id="editTipContent" rows="3"></textarea>
+                        <label for="editTip">Tip</label>
+                        <textarea class="form-control" id="editTip" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -160,5 +175,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
+
+{% endblock %}
+
+{% block background %}
 {% endblock %}
