@@ -66,6 +66,7 @@ class carChatResource(Resource):  # Renamed to avoid confusion with model
         return 201
 
   # Ensure the user is authenticated
+    @token_required()
     def put(self):
         # Obtain the current user
         current_user = g.current_user
