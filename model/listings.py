@@ -56,17 +56,29 @@ class UserItem(db.Model):
         
     @staticmethod
     def restore(data):
-        print(post_data["user_input"])
         for post_data in data:
-            _ = post_data.pop('id', None)  # Remove 'id' from post_data
-            name = post_data.get("name", None)
-            post = UserItem.query.filter_by(name=name).first()
+            post_data.pop('id', None)  # Remove 'id' from post_data
+            
+            name = post_data.get("name")
+            user_id = post_data.get("user_id")
+            post = UserItem.query.filter_by(name=name, user_id=user_id).first()
+            
             if post:
-                post.update(post_data)
+                if "user_input" in post_data:
+                    post.user_input = post_data["user_input"]
+                db.session.commit()
             else:
-                post = UserItem(post_data["name"], post_data["user_id"], post_data["user_input"], post_data["date_added"])
-                post.update(post_data)
+                date_added = post_data.get("date_added")
+                if isinstance(date_added, str):  # Convert string to datetime if needed
+                    date_added = datetime.fromisoformat(date_added)
+                post = UserItem(
+                    name=post_data["name"],
+                    user_id=post_data["user_id"],
+                    user_input=post_data.get("user_input"),
+                    date_added=date_added
+                )
                 post.create()
+
 
 def initDefaultUser():
     """
