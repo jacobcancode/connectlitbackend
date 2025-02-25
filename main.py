@@ -84,6 +84,42 @@ def carPosts():
     print("Car Post Data:", carPost_data)  # Debugging line to check if data is fetched
     return render_template("carPosts.html", carPost_data=carPost_data)
 
+@app.route('/carChat')
+@login_required  # Ensure that only logged-in users can access this page
+def carChatPage():
+    carChat_data = carChat.query.all()  # Fetch all car chat messages from the database
+    print("Car Chat Data:", carChat_data)  # Debugging line to check if data is fetched
+    return render_template("carChat.html", carChat_data=carChat_data)
+
+@app.route('/carComments')
+@login_required  # Ensure that only logged-in users can access this page
+def carCommentsPage():
+    carComments_data = CarComments.query.all()  # Fetch all car comments from the database
+    print("Car Comments Data:", carComments_data)  # Debugging line to check if data is fetched
+    return render_template("carComments.html", carComments_data=carComments_data)
+
+@app.route('/mechanicsTips')
+@login_required  # Ensure that only logged-in users can access this page
+def mechanicsTipsPage():
+    mechanicsTips_data = MechanicsTip.query.all()  # Fetch all mechanics tips from the database
+    print("Mechanics Tips Data:", mechanicsTips_data)  # Debugging line to check if data is fetched
+    return render_template("mechanicsTips.html", mechanicsTips_data=mechanicsTips_data)
+
+@app.route('/listings')
+@login_required  # Ensure that only logged-in users can access this page
+def listingsPage():
+    listings_data = UserItem.query.all()  # Fetch all listings from the database
+    print("Listings Data:", listings_data)  # Debugging line to check if data is fetched
+    return render_template("listings.html", listings_data=listings_data)
+
+@app.route('/vehicles')
+@login_required  # Ensure that only logged-in users can access this page
+def vehiclesPage():
+    vehicles_data = Vehicle.query.all()  # Fetch all vehicles from the database
+    print("Vehicles Data:", vehicles_data)  # Debugging line to check if data is fetched
+    return render_template("vehicles.html", vehicles_data=vehicles_data)
+
+
 @app.route('/carChat/<int:id>', methods=['PUT'])
 def edit_chat_message(id):
     data = request.get_json()  # Get the JSON data from the request
