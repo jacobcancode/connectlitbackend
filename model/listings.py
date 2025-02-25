@@ -38,16 +38,13 @@ class UserItem(db.Model):
             "date_added": self.date_added.isoformat() if self.date_added else None,
         }
 
-    def update(self, data):
-        for key, value in data.items():
-            if hasattr(self, key):  # Only update existing attributes
-                setattr(self, key, value)
+    def update(self, user_input):
+        self.user_input = user_input
         try:
             db.session.commit()
         except Exception as error:
             db.session.rollback()
             raise error
-
 
     def delete(self):
         try:
@@ -59,6 +56,7 @@ class UserItem(db.Model):
         
     @staticmethod
     def restore(data):
+        print(post_data["user_input"])
         for post_data in data:
             _ = post_data.pop('id', None)  # Remove 'id' from post_data
             name = post_data.get("name", None)
@@ -67,8 +65,8 @@ class UserItem(db.Model):
                 post.update(post_data)
             else:
                 post = UserItem(post_data["name"], post_data["user_id"], post_data["user_input"], post_data["date_added"])
+                post.update(post_data)
                 post.create()
-
 
 def initDefaultUser():
     """
