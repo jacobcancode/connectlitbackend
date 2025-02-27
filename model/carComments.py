@@ -61,7 +61,13 @@ class CarComments(db.Model):
         data = {
             "id": self.id,
             "content": self._content,
-            "uid": user.id if user else None,
+            "user": {
+                "name": user.read()["name"],
+                "id": user.read()["id"],
+                "uid": user.read()["uid"],
+                "email": user.read()["email"],
+                "pfp": user.read()["pfp"]
+            },
             "postid": self._post_id,
             "date_posted": self._date_posted
         }

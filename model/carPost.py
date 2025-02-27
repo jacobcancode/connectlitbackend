@@ -100,6 +100,7 @@ class CarPost(db.Model):
             "user": {
                 "name": user.read()["name"],
                 "id": user.read()["id"],
+                "uid": user.read()["uid"],
                 "email": user.read()["email"],
                 "pfp": user.read()["pfp"]
             },
