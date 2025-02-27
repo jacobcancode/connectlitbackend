@@ -64,7 +64,10 @@ class carChat(db.Model):
             'timestamp': self._timestamp.isoformat() if self._timestamp else None  # Changed to ISO format
         }
 
-    def update(self):
+    def update(self, data=None):
+        if data:
+            self._message = data.get("message", self._message)
+            self._user_id = data.get("user_id", self._user_id)
         """
         The update method commits the transaction to the database.
         
