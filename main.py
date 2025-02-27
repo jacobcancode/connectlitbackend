@@ -184,6 +184,14 @@ def getPostImages(post_id):
         
     return jsonify(images)
 
+@app.route('/api/carComment/<int:post_id>', methods=['GET'])
+def getPostComments(post_id):
+    post = CarPost.query.get(post_id)
+    if post is None:
+        return jsonify({'message': 'Post not found'}), 404
+    comments = CarComments.query.filter(CarComments._post_id == post_id).all()
+    return jsonify([comment.read() for comment in comments])
+
 @app.route('/api/data/mort', methods=['GET'])
 def get_data():
     # start a list, to be used like a information database
