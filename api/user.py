@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from __init__ import app
 from api.jwt_authorize import token_required
 from model.user import User
+import json
 
 # Create a Blueprint for the user API
 user_api = Blueprint('user_api', __name__, url_prefix='/api')
@@ -78,27 +79,68 @@ class UserAPI:
             """
             Create a new user.
             """
-            body = request.get_json()
+            try:
+                body = request.get_json()
+                if not body:
+                    return {
+                        "message": "Please provide user details",
+                        "error": "Bad request"
+                    }, 400
 
-            # Validate name
-            name = body.get('name')
-            if name is None or len(name) < 2:
-                return {'message': 'Name is missing, or is less than 2 characters'}, 400
+                # Validate name
+                name = body.get('name')
+                if name is None or len(name) < 2:
+                    return {
+                        "message": "Name is missing or less than 2 characters",
+                        "error": "Validation error"
+                    }, 400
 
-            # Validate uid
-            uid = body.get('uid')
-            if uid is None or len(uid) < 2:
-                return {'message': 'User ID is missing, or is less than 2 characters'}, 400
+                # Validate uid
+                uid = body.get('uid')
+                if uid is None or len(uid) < 2:
+                    return {
+                        "message": "User ID is missing or less than 2 characters",
+                        "error": "Validation error"
+                    }, 400
 
-            # Setup minimal USER OBJECT
-            user_obj = User(name=name, uid=uid)
+                # Validate password
+                password = body.get('password')
+                if password is None or len(password) < 6:
+                    return {
+                        "message": "Password is missing or less than 6 characters",
+                        "error": "Validation error"
+                    }, 400
 
-            # Add user to database
-            user = user_obj.create(body)  # pass the body elements to be saved in the database
-            if not user:  # failure returns error message
-                return {'message': f'Processed {name}, either a format error or User ID {uid} is duplicate'}, 400
+                # Check if user already exists
+                existing_user = User.query.filter_by(_uid=uid).first()
+                if existing_user:
+                    return {
+                        "message": "User ID already exists",
+                        "error": "Duplicate error"
+                    }, 409
 
-            return jsonify(user.read())
+                # Setup minimal USER OBJECT
+                user_obj = User(name=name, uid=uid)
+
+                # Add user to database
+                user = user_obj.create(body)
+                if not user:
+                    return {
+                        "message": "Failed to create user",
+                        "error": "Database error"
+                    }, 500
+
+                # Create response with CORS headers
+                resp = jsonify(user.read())
+                resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+                resp.headers.add('Access-Control-Allow-Credentials', 'true')
+                return resp
+
+            except Exception as e:
+                return {
+                    "message": "An error occurred during signup",
+                    "error": str(e)
+                }, 500
         
         @token_required()
         def get(self):
@@ -162,23 +204,36 @@ class UserAPI:
                 if not body:
                     return {
                         "message": "Please provide user details",
-                        "data": None,
                         "error": "Bad request"
                     }, 400
 
                 # Get Data
                 uid = body.get('uid')
                 if uid is None:
-                    return {'message': 'User ID is missing'}, 401
+                    return {
+                        "message": "User ID is missing",
+                        "error": "Validation error"
+                    }, 401
                 password = body.get('password')
                 if not password:
-                    return {'message': 'Password is missing'}, 401
+                    return {
+                        "message": "Password is missing",
+                        "error": "Validation error"
+                    }, 401
 
                 # Find user
                 user = User.query.filter_by(_uid=uid).first()
+                if user is None:
+                    return {
+                        "message": "User not found",
+                        "error": "Authentication error"
+                    }, 401
 
-                if user is None or not user.is_password(password):
-                    return {'message': "Invalid user id or password"}, 401
+                if not user.is_password(password):
+                    return {
+                        "message": "Invalid password",
+                        "error": "Authentication error"
+                    }, 401
 
                 # Generate token
                 token = jwt.encode(
@@ -189,7 +244,13 @@ class UserAPI:
                     current_app.config["SECRET_KEY"],
                     algorithm="HS256"
                 )
-                resp = Response(f"Authentication for {user._uid} successful")
+
+                # Create response with cookie and CORS headers
+                resp = Response(json.dumps({
+                    "message": f"Authentication for {user._uid} successful",
+                    "user": user.read()
+                }), mimetype='application/json')
+                
                 resp.set_cookie(
                     current_app.config["JWT_TOKEN_NAME"],
                     token,
@@ -200,15 +261,17 @@ class UserAPI:
                     samesite='None',  # Required for cross-site requests
                     domain='bookconnect-832734119496.us-west1.run.app'  # Match the exact domain
                 )
-                # Add CORS headers explicitly
+                
+                # Add CORS headers
                 resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
                 resp.headers.add('Access-Control-Allow-Credentials', 'true')
                 return resp
+
             except Exception as e:
-                print(e)
+                print(f"Login error: {str(e)}")
                 return {
-                    "error": "Something went wrong",
-                    "message": str(e)
+                    "message": "An error occurred during login",
+                    "error": str(e)
                 }, 500
 
         @token_required()
