@@ -25,7 +25,7 @@ class _NestImage(Resource):
     - A JSON object containing the base64 encoded string of the profile picture under the key 'pfp' if the operation is successful.
     - HTTP status code 200 if the  picture is successfully retrieved.
     - HTTP status code 404 if the  picture is not set for the current post.
-    - HTTP status code 500 if an error occurs while reading the post picture from the server.
+    - HTTP status code  if an error occurs while reading the post picture from the server.
     """
     @token_required()
     def get(self):

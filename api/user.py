@@ -236,44 +236,63 @@ class UserAPI:
                     }, 401
 
                 # Generate token
-                token = jwt.encode(
-                    {
-                        "_uid": user._uid,
-                        "exp": datetime.utcnow() + timedelta(seconds=3600)  # Token expires in 1 hour
-                    },
-                    current_app.config["SECRET_KEY"],
-                    algorithm="HS256"
-                )
+                try:
+                    token = jwt.encode(
+                        {
+                            "_uid": user._uid,
+                            "exp": datetime.utcnow() + timedelta(seconds=3600)  # Token expires in 1 hour
+                        },
+                        current_app.config["SECRET_KEY"],
+                        algorithm="HS256"
+                    )
+                except Exception as e:
+                    print(f"JWT encoding error: {str(e)}")
+                    return {
+                        "message": "Failed to generate authentication token",
+                        "error": str(e)
+                    }, 500
 
                 # Create response with cookie and CORS headers
-                resp = Response(json.dumps({
-                    "message": f"Authentication for {user._uid} successful",
-                    "user": user.read()
-                }), mimetype='application/json')
-                
-                resp.set_cookie(
-                    current_app.config["JWT_TOKEN_NAME"],
-                    token,
-                    max_age=3600,
-                    secure=True,
-                    httponly=True,
-                    path='/',
-                    samesite='None',  # Required for cross-site requests
-                    domain='.github.io'  # Allow all GitHub Pages subdomains
-                )
-                
-                # Add CORS headers
-                resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
-                resp.headers.add('Access-Control-Allow-Credentials', 'true')
-                resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                return resp
+                try:
+                    resp = Response(json.dumps({
+                        "message": f"Authentication for {user._uid} successful",
+                        "user": user.read()
+                    }), mimetype='application/json')
+                    
+                    # Set cookie without domain to allow cross-origin
+                    resp.set_cookie(
+                        current_app.config["JWT_TOKEN_NAME"],
+                        token,
+                        max_age=3600,
+                        secure=True,
+                        httponly=True,
+                        path='/',
+                        samesite='None'  # Required for cross-site requests
+                    )
+                    
+                    # Add CORS headers
+                    resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+                    resp.headers.add('Access-Control-Allow-Credentials', 'true')
+                    resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    return resp
+                except Exception as e:
+                    print(f"Response creation error: {str(e)}")
+                    return {
+                        "message": "Failed to create authentication response",
+                        "error": str(e)
+                    }, 500
 
             except Exception as e:
-                print(f"Login error: {str(e)}")
+                import traceback
+                print(f"Login error details:")
+                print(f"Error type: {type(e)}")
+                print(f"Error message: {str(e)}")
+                print(f"Traceback: {traceback.format_exc()}")
                 return {
                     "message": "An error occurred during login",
-                    "error": str(e)
+                    "error": str(e),
+                    "error_type": type(e).__name__
                 }, 500
 
         @token_required()
