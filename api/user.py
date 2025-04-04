@@ -259,12 +259,14 @@ class UserAPI:
                     httponly=True,
                     path='/',
                     samesite='None',  # Required for cross-site requests
-                    domain='bookconnect-832734119496.us-west1.run.app'  # Match the exact domain
+                    domain='.github.io'  # Allow all GitHub Pages subdomains
                 )
                 
                 # Add CORS headers
                 resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
                 resp.headers.add('Access-Control-Allow-Credentials', 'true')
+                resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
                 return resp
 
             except Exception as e:
