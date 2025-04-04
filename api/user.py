@@ -1,7 +1,7 @@
 import jwt
 from flask import Blueprint, request, jsonify, current_app, Response, g
 from flask_restful import Api, Resource  # used for REST API building
-from datetime import datetime
+from datetime import datetime, timedelta
 from __init__ import app
 from api.jwt_authorize import token_required
 from model.user import User
@@ -182,7 +182,10 @@ class UserAPI:
 
                 # Generate token
                 token = jwt.encode(
-                    {"_uid": user._uid},
+                    {
+                        "_uid": user._uid,
+                        "exp": datetime.utcnow() + timedelta(seconds=3600)  # Token expires in 1 hour
+                    },
                     current_app.config["SECRET_KEY"],
                     algorithm="HS256"
                 )
@@ -195,7 +198,7 @@ class UserAPI:
                     httponly=True,
                     path='/',
                     samesite='None',  # Required for cross-site requests
-                    domain=None  # Allow cookies for all domains
+                    domain='bookconnect-832734119496.us-west1.run.app'  # Match the exact domain
                 )
                 # Add CORS headers explicitly
                 resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
