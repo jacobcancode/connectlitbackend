@@ -252,23 +252,13 @@ class UserAPI:
                         "error": str(e)
                     }, 500
 
-                # Create response with cookie and CORS headers
+                # Create response with token in Authorization header
                 try:
                     resp = Response(json.dumps({
                         "message": f"Authentication for {user._uid} successful",
-                        "user": user.read()
+                        "user": user.read(),
+                        "token": token  # Send token in response body
                     }), mimetype='application/json')
-                    
-                    # Set cookie without domain to allow cross-origin
-                    resp.set_cookie(
-                        current_app.config["JWT_TOKEN_NAME"],
-                        token,
-                        max_age=3600,
-                        secure=True,
-                        httponly=True,
-                        path='/',
-                        samesite='None'  # Required for cross-site requests
-                    )
                     
                     # Add CORS headers
                     resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')

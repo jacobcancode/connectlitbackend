@@ -32,10 +32,20 @@ def token_required(roles=None):
     def decorator(func_to_guard):
         @wraps(func_to_guard)
         def decorated(*args, **kwargs):
-            token = request.cookies.get(current_app.config["JWT_TOKEN_NAME"])
-            if not token:
+            # Check for token in Authorization header
+            auth_header = request.headers.get('Authorization')
+            if not auth_header:
                 return {
                     "message": "Token is missing",
+                    "error": "Unauthorized"
+                }, 401
+
+            # Extract token from Authorization header
+            try:
+                token = auth_header.split(' ')[1]  # Format: Bearer <token>
+            except IndexError:
+                return {
+                    "message": "Invalid Authorization header format",
                     "error": "Unauthorized"
                 }, 401
 
@@ -56,7 +66,7 @@ def token_required(roles=None):
                         "data": data
                     }, 403
                     
-                # Authentication succes, set the current_user in the global context (Flask's g object)
+                # Authentication success, set the current_user in the global context
                 g.current_user = current_user
             except jwt.ExpiredSignatureError:
                 return {
