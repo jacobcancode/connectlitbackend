@@ -16,8 +16,17 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# Allowed servers for cross-origin resource sharing (CORS), these are GitHub Pages and localhost for GitHub Pages testing
-cors = CORS(app, supports_credentials=True, origins=['http://localhost:4887', 'http://127.0.0.1:4887', 'https://motor.stu.nighthawkcoders.github.io', 'https://tvick22.github.io'])
+# Configure CORS with more permissive settings
+cors = CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:4888", "http://127.0.0.1:4888"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"],  # Allow all headers
+        "expose_headers": ["*"],  # Expose all headers
+        "supports_credentials": True,
+        "max_age": 3600  # Cache preflight requests for 1 hour
+    }
+})
 
 # System Defaults
 app.config['ADMIN_USER'] = os.environ.get('ADMIN_USER') or 'admin'

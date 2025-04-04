@@ -36,8 +36,10 @@ from api.userCars import userCars_api
 from api.mechanicsTips import mechanicsTips_api
 from api.vinStore import vinStore_api
 from api.favorites import itemStore_api
-
+from api.books import books_api
+from api.reading import reading_bp
 from api.vote import vote_api
+from api.journal import journal_bp
 # database Initialization functions
 from model.carChat import carChat
 from model.mechanicsTips import MechanicsTip
@@ -52,6 +54,7 @@ from model.carPost import CarPost
 from model.vehicle import Vehicle, initVehicles
 from model.listings import UserItem, initDefaultUser
 from model.carComments import CarComments
+from model.reading import ReadingJournal  # Update import to use the existing model
 # server only Views
 
 # register URIs for api endpoints
@@ -76,6 +79,9 @@ app.register_blueprint(userCars_api)
 app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
+app.register_blueprint(books_api, url_prefix='/api/books')
+app.register_blueprint(reading_bp, url_prefix='/api/reading')
+app.register_blueprint(journal_bp, url_prefix='/api/reading')
 
 @app.route('/carPosts')
 @login_required  # Ensure that only logged-in users can access this page
@@ -270,8 +276,12 @@ def page_not_found(e):
 
 @app.route('/')  # connects default URL to index() function
 def index():
-    print("Home:", current_user)
-    return render_template("index.html")
+    if current_user.is_authenticated:
+        # If user is logged in, show dashboard with user data
+        return render_template("index.html")
+    else:
+        # If user is not logged in, show landing page
+        return render_template("index.html")
 
 @app.route('/users/table')
 @login_required
@@ -324,6 +334,8 @@ def generate_data():
     initUsers()
     initSections()
     initVehicles()
+    from model.reading import initJournal  # Import initJournal from the correct location
+    initJournal()
     
 # Backup the old database
 def backup_database(db_uri, backup_uri):
@@ -349,6 +361,7 @@ def extract_data():
         data['user_items'] = [post.read() for post in UserItem.query.all()]
         data['vehicles'] = [vehicle.read() for vehicle in Vehicle.query.all()]
         data['carComments'] = [comment.read() for comment in CarComments.query.all()]
+        data['journal_entries'] = [entry.read() for entry in ReadingJournal.query.all()]  # Add journal entries
     return data
 
 # Save extracted data to JSON files
