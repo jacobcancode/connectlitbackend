@@ -235,36 +235,18 @@ class UserAPI:
                         "error": "Authentication error"
                     }, 401
 
-                # Generate token
-                try:
-                    token = jwt.encode(
-                        {
-                            "_uid": user._uid,
-                            "exp": datetime.utcnow() + timedelta(seconds=3600)  # Token expires in 1 hour
-                        },
-                        current_app.config["SECRET_KEY"],
-                        algorithm="HS256"
-                    )
-                except Exception as e:
-                    print(f"JWT encoding error: {str(e)}")
-                    return {
-                        "message": "Failed to generate authentication token",
-                        "error": str(e)
-                    }, 500
-
-                # Create response with token in Authorization header
+                # Create response with user data
                 try:
                     resp = Response(json.dumps({
                         "message": f"Authentication for {user._uid} successful",
-                        "user": user.read(),
-                        "token": token  # Send token in response body
+                        "user": user.read()
                     }), mimetype='application/json')
                     
                     # Add CORS headers
                     resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
                     resp.headers.add('Access-Control-Allow-Credentials', 'true')
                     resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                    resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    resp.headers.add('Access-Control-Allow-Headers', 'Content-Type')
                     return resp
                 except Exception as e:
                     print(f"Response creation error: {str(e)}")

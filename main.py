@@ -251,6 +251,7 @@ def login():
         user = User.query.filter_by(_uid=request.form['username']).first()
         if user and user.is_password(request.form['password']):
             login_user(user)
+            session['user_id'] = user.id  # Store user ID in session
             if not is_safe_url(next_page):
                 return abort(400)
             return redirect(next_page or url_for('index'))
