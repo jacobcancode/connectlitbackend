@@ -1,0 +1,138 @@
+{% extends "layouts/base.html" %}
+
+{% block head %}
+<style>
+    .admin-section {
+        background: linear-gradient(135deg, #2C3E50 0%, #1a1c1e 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-family: 'Georgia', serif;
+    }
+
+    .admin-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 1rem;
+    }
+
+    .admin-card {
+        background: rgba(44, 62, 80, 0.9);
+        border-radius: 10px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid #3498DB;
+        text-align: center;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        border-color: #2980B9;
+    }
+
+    .card-icon {
+        font-size: 3rem;
+        color: #3498DB;
+        margin-bottom: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        color: #3498DB;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .card-description {
+        color: #ecf0f1;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-button {
+        background-color: #3498DB;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .admin-button:hover {
+        background-color: #2980B9;
+        color: white;
+    }
+
+    .book-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%233498DB' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-section">
+    <div class="book-pattern"></div>
+    <div class="container">
+        <h1 class="admin-title">Book Connect Admin Dashboard</h1>
+        
+        <div class="admin-cards">
+            <div class="admin-card">
+                <i class="fas fa-book-open card-icon"></i>
+                <h2 class="card-title">Book Management</h2>
+                <p class="card-description">Manage your book collection, add new titles, and organize reading lists.</p>
+                <a href="{{ url_for('books') }}" class="admin-button">Manage Books</a>
+            </div>
+            
+            <div class="admin-card">
+                <i class="fas fa-users card-icon"></i>
+                <h2 class="card-title">User Management</h2>
+                <p class="card-description">Manage user accounts, reading preferences, and reading progress.</p>
+                <a href="{{ url_for('users') }}" class="admin-button">Manage Users</a>
+            </div>
+            
+            <div class="admin-card">
+                <i class="fas fa-chart-line card-icon"></i>
+                <h2 class="card-title">Reading Analytics</h2>
+                <p class="card-description">View reading statistics, user engagement, and platform usage.</p>
+                <a href="{{ url_for('analytics') }}" class="admin-button">View Analytics</a>
+            </div>
+            
+            <div class="admin-card">
+                <i class="fas fa-tools card-icon"></i>
+                <h2 class="card-title">Reading Tools</h2>
+                <p class="card-description">Configure reading tools, bookmarks, and annotation features.</p>
+                <a href="{{ url_for('tools') }}" class="admin-button">Manage Tools</a>
+            </div>
+            
+            <div class="admin-card">
+                <i class="fas fa-comments card-icon"></i>
+                <h2 class="card-title">Reading Groups</h2>
+                <p class="card-description">Manage reading groups, discussions, and community features.</p>
+                <a href="{{ url_for('groups') }}" class="admin-button">Manage Groups</a>
+            </div>
+            
+            <div class="admin-card">
+                <i class="fas fa-cog card-icon"></i>
+                <h2 class="card-title">System Settings</h2>
+                <p class="card-description">Configure platform settings, notifications, and preferences.</p>
+                <a href="{{ url_for('settings') }}" class="admin-button">Settings</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
