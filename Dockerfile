@@ -29,7 +29,7 @@ RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose the port the app runs on
-EXPOSE 8888
+EXPOSE 8080
 
 # Command to run the application
 CMD ["python", "main.py"]
