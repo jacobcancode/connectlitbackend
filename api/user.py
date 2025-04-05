@@ -194,7 +194,8 @@ class UserAPI:
                     secure=True,
                     httponly=True,
                     path='/',
-                    samesite='None'  # This is the key part for cross-site requests
+                    samesite='None',  # Required for cross-site requests
+                    domain=None  # Allow cookies for all domains
                 )
                 return resp
             except Exception as e:
