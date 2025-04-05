@@ -5,8 +5,18 @@ services:
                 build: .
                 env_file:
                         - .env # This file is optional; defaults will be used if it does not exist
+                environment:
+                        - FLASK_ENV=development
+                        - FLASK_DEBUG=1
                 ports:
                         - "8104:8104"
+                        - "8080:8080"
                 volumes:
                         - ./instance:/instance
                 restart: unless-stopped
+                networks:
+                        - app-network
+
+networks:
+        app-network:
+                driver: bridge

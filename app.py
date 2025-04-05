@@ -7,7 +7,23 @@ db = SQLAlchemy()
 
 # initialize a flask application (app)
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins='*')  # Allow all origins (*)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:4888",
+            "http://127.0.0.1:4888",
+            "https://bookconnect-832734119496.us-west1.run.app",
+            "https://*.us-west1.run.app",
+            "https://jacobcancode.github.io",
+            "https://*.github.io"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"],
+        "expose_headers": ["*"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
 
 # ... your existing Flask
 

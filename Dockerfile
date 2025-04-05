@@ -5,7 +5,8 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     FLASK_APP=main.py \
-    FLASK_ENV=production
+    FLASK_ENV=production \
+    FLASK_DEBUG=0
 
 # Set working directory
 WORKDIR /app

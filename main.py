@@ -406,8 +406,16 @@ app.cli.add_command(custom_cli)
         
 # this runs the flask application on the development server
 if __name__ == "__main__":
-    # change name for testing
+    # Development configuration
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.run(debug=True, host="0.0.0.0", port="8080")
+else:
+    # Production configuration
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 
 # @app.route('/api/mechanicsTips', methods=['GET'])

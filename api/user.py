@@ -197,6 +197,9 @@ class UserAPI:
                     samesite='None',  # Required for cross-site requests
                     domain=None  # Allow cookies for all domains
                 )
+                # Add CORS headers explicitly
+                resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+                resp.headers.add('Access-Control-Allow-Credentials', 'true')
                 return resp
             except Exception as e:
                 print(e)
