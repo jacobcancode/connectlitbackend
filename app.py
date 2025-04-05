@@ -61,7 +61,7 @@ def get():
         "I am enough just as I am.",
         "I deserve love and respect.",
         "I choose to focus on my strengths.",
-        "I am proud of the progress I’ve made.",
+        "I am proud of the progress I've made.",
         "I trust myself to make the right decisions.",
         
         # Confidence and Empowerment
