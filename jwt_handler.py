@@ -1,6 +1,5 @@
 import jwt
 import datetime
-import os
 from functools import wraps
 from flask import request, jsonify, current_app, redirect, url_for
 from model.user import User
@@ -8,53 +7,43 @@ from model.user import User
 def generate_token(user):
     """Generate a JWT token for the given user."""
     try:
+        # Simple payload with essential data
         payload = {
-            'id': user.id,
-            'username': user._name,
-            'role': user._role,
-            'exp': datetime.datetime.utcnow() + current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+            'user_id': user.id,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
         }
-        # Generate token with proper error handling
+        # Generate token using app's secret key
         token = jwt.encode(
             payload=payload,
-            key=current_app.config['JWT_SECRET_KEY'],
-            algorithm=current_app.config['JWT_ALGORITHM']
+            key=current_app.secret_key,
+            algorithm='HS256'
         )
-        if isinstance(token, bytes):
-            token = token.decode('utf-8')
         return token
     except Exception as e:
-        current_app.logger.error(f"Error generating token: {str(e)}")
+        current_app.logger.error(f"Token generation error: {str(e)}")
         return None
 
 def decode_token(token):
     """Decode and validate a JWT token."""
     try:
-        # Decode token with proper error handling
         payload = jwt.decode(
             jwt=token,
-            key=current_app.config['JWT_SECRET_KEY'],
-            algorithms=[current_app.config['JWT_ALGORITHM']]
+            key=current_app.secret_key,
+            algorithms=['HS256']
         )
         return payload
-    except jwt.ExpiredSignatureError:
-        current_app.logger.warning("Token has expired")
-        return None
-    except jwt.InvalidTokenError as e:
-        current_app.logger.warning(f"Invalid token: {str(e)}")
-        return None
     except Exception as e:
-        current_app.logger.error(f"Error decoding token: {str(e)}")
+        current_app.logger.error(f"Token decoding error: {str(e)}")
         return None
 
 def get_token_from_request():
     """Extract token from request headers or cookies."""
-    # Check Authorization header
+    # Check Authorization header first
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         return auth_header.split(' ')[1]
     
-    # Check cookies
+    # Then check cookies
     return request.cookies.get('jwt_token')
 
 def token_required(f):
@@ -62,23 +51,16 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_from_request()
-        
         if not token:
-            if request.is_json:
-                return jsonify({'message': 'Token is missing'}), 401
-            return redirect(url_for('login'))
+            return jsonify({'error': 'Token is missing'}), 401
         
         payload = decode_token(token)
         if not payload:
-            if request.is_json:
-                return jsonify({'message': 'Invalid or expired token'}), 401
-            return redirect(url_for('login'))
+            return jsonify({'error': 'Invalid or expired token'}), 401
         
-        user = User.query.get(payload['id'])
+        user = User.query.get(payload['user_id'])
         if not user:
-            if request.is_json:
-                return jsonify({'message': 'User not found'}), 401
-            return redirect(url_for('login'))
+            return jsonify({'error': 'User not found'}), 401
         
         return f(user, *args, **kwargs)
     return decorated
@@ -93,4 +75,4 @@ def get_current_user():
     if not payload:
         return None
     
-    return User.query.get(payload['id']) 
+    return User.query.get(payload['user_id']) 

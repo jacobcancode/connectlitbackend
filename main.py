@@ -101,7 +101,7 @@ from jwt_handler import generate_token, token_required
 def login():
     if request.method == 'POST':
         try:
-            # Get credentials from either form data or JSON
+            # Get credentials from request
             if request.is_json:
                 data = request.get_json()
                 username = data.get('username')
@@ -110,6 +110,7 @@ def login():
                 username = request.form.get('username')
                 password = request.form.get('password')
             
+            # Validate credentials
             if not username or not password:
                 return jsonify({'error': 'Username and password are required'}), 400
             
@@ -117,38 +118,34 @@ def login():
             if not user or not user.is_password(password):
                 return jsonify({'error': 'Invalid username or password'}), 401
             
-            # Generate JWT token
+            # Generate token
             token = generate_token(user)
             if not token:
-                app.logger.error("Failed to generate JWT token")
-                return jsonify({'error': 'Failed to generate authentication token'}), 500
+                return jsonify({'error': 'Failed to generate token'}), 500
             
-            # Create response data
+            # Prepare response
             response_data = {
                 'token': token,
                 'user': {
                     'id': user.id,
-                    'username': user._name,
-                    'role': user._role
+                    'username': user._name
                 }
             }
             
-            # For API requests, return JSON with token in header
+            # Handle API requests
             if request.is_json or request.headers.get('Accept') == 'application/json':
                 response = jsonify(response_data)
                 response.headers['Authorization'] = f'Bearer {token}'
-                response.headers['Access-Control-Expose-Headers'] = 'Authorization'
                 return response
             
-            # For web requests, set cookie and redirect
-            next_page = request.form.get('next') or request.args.get('next')
-            response = redirect(next_page or url_for('index'))
+            # Handle web requests
+            response = redirect(request.form.get('next') or url_for('index'))
             response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='None')
             return response
             
         except Exception as e:
-            app.logger.error(f"Login error: {str(e)}")
-            return jsonify({'error': 'An internal server error occurred'}), 500
+            current_app.logger.error(f"Login error: {str(e)}")
+            return jsonify({'error': 'An error occurred during login'}), 500
     
     return render_template('login.html', next=request.args.get('next'))
 
