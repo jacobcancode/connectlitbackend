@@ -64,24 +64,24 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
     <!-- JWT Token Handling -->
     <script>
-        // JWT Token handling
-        function getToken() {
+        // Token handling functions
+        window.getToken = function() {
             return localStorage.getItem('jwt_token');
-        }
+        };
 
-        function isLoggedIn() {
-            return !!getToken();
-        }
+        window.isLoggedIn = function() {
+            return !!window.getToken();
+        };
 
-        function logout() {
+        window.logout = function() {
             localStorage.removeItem('jwt_token');
             window.location.href = '/logout';
-        }
+        };
 
-        // Override fetch to automatically add JWT token to requests
+        // Override fetch to automatically add token
         const originalFetch = window.fetch;
         window.fetch = async function(url, options = {}) {
-            const token = getToken();
+            const token = window.getToken();
             if (token) {
                 options.headers = {
                     ...options.headers,
@@ -95,7 +95,7 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
         document.addEventListener('DOMContentLoaded', function() {
             const loginStatus = document.getElementById('loginStatus');
             if (loginStatus) {
-                if (isLoggedIn()) {
+                if (window.isLoggedIn()) {
                     loginStatus.innerHTML = '<a href="#" onclick="logout()">Logout</a>';
                 } else {
                     loginStatus.innerHTML = '<a href="/login">Login</a>';
@@ -108,7 +108,6 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
 {% block background %}
     <script src="{{ url_for('static', filename='js/three.r119.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/vanta.birds.min.js') }}"></script>
     <script>
         VANTA.BIRDS({
             el: "#body_background",
