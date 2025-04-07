@@ -5,29 +5,23 @@ from functools import wraps
 from flask import request, jsonify, current_app, redirect, url_for
 from model.user import User
 
-# JWT Configuration
-JWT_SECRET_KEY = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
-JWT_ALGORITHM = 'HS256'
-TOKEN_EXPIRATION_DAYS = 1
-
 def generate_token(user):
     """Generate a JWT token for the given user."""
-    if not JWT_SECRET_KEY:
-        current_app.logger.error("JWT_SECRET_KEY is not set")
-        return None
-        
     try:
         payload = {
             'id': user.id,
             'username': user._name,
             'role': user._role,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=TOKEN_EXPIRATION_DAYS)
+            'exp': datetime.datetime.utcnow() + current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
         }
+        # Generate token with proper error handling
         token = jwt.encode(
             payload=payload,
-            key=JWT_SECRET_KEY,
-            algorithm=JWT_ALGORITHM
+            key=current_app.config['JWT_SECRET_KEY'],
+            algorithm=current_app.config['JWT_ALGORITHM']
         )
+        if isinstance(token, bytes):
+            token = token.decode('utf-8')
         return token
     except Exception as e:
         current_app.logger.error(f"Error generating token: {str(e)}")
@@ -35,15 +29,12 @@ def generate_token(user):
 
 def decode_token(token):
     """Decode and validate a JWT token."""
-    if not JWT_SECRET_KEY:
-        current_app.logger.error("JWT_SECRET_KEY is not set")
-        return None
-        
     try:
+        # Decode token with proper error handling
         payload = jwt.decode(
             jwt=token,
-            key=JWT_SECRET_KEY,
-            algorithms=[JWT_ALGORITHM]
+            key=current_app.config['JWT_SECRET_KEY'],
+            algorithms=[current_app.config['JWT_ALGORITHM']]
         )
         return payload
     except jwt.ExpiredSignatureError:

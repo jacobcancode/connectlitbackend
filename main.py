@@ -56,6 +56,22 @@ from model.carComments import CarComments
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
 
+# Configure JWT
+app.config['JWT_SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['JWT_ALGORITHM'] = 'HS256'
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=1)
+
+# Configure CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": ["https://jacobcancode.github.io", "https://bookconnect-832734119496.us-west1.run.app"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "expose_headers": ["Authorization"]
+    }
+})
+
 # Initialize Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -72,21 +88,6 @@ def unauthorized_callback():
 @app.context_processor
 def inject_user():
     return dict(current_user=current_user)
-
-# Configure CORS
-CORS(app, resources={
-    r"/*": {
-        "origins": ["https://jacobcancode.github.io", "https://bookconnect-832734119496.us-west1.run.app"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True,
-        "expose_headers": ["Authorization"]
-    }
-})
-
-# JWT Configuration
-JWT_SECRET_KEY = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
-JWT_ALGORITHM = 'HS256'
 
 # Helper function to check if the URL is safe for redirects
 def is_safe_url(target):
