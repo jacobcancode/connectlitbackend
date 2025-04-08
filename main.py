@@ -12,6 +12,7 @@ import shutil
 import datetime
 import jwt
 from functools import wraps
+from datetime import timedelta
 
 # import "objects" from "this" project
 from __init__ import db  # Key Flask objects 
@@ -54,25 +55,27 @@ from model.carComments import CarComments
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
-
-# Configure JWT
-app.config['JWT_SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 app.config['JWT_ALGORITHM'] = 'HS256'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=1)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 
 # Configure CORS
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://jacobcancode.github.io", "https://bookconnect-832734119496.us-west1.run.app"],
+        "origins": ["http://localhost:8080", "https://connectlitbackend-7j3q3x3q3q-uc.a.run.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True,
-        "expose_headers": ["Authorization"]
+        "supports_credentials": True
     }
 })
 
-# Initialize Login Manager
+# Database setup
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///connectlit.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
+
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -144,7 +147,7 @@ def login():
             return response
             
         except Exception as e:
-            current_app.logger.error(f"Login error: {str(e)}")
+            app.logger.error(f"Login error: {str(e)}")
             return jsonify({'error': 'An error occurred during login'}), 500
     
     return render_template('login.html', next=request.args.get('next'))
@@ -155,10 +158,18 @@ def logout():
     response.delete_cookie('jwt_token')
     return response
 
-@app.errorhandler(404)  # catch for URL not found
-def page_not_found(e):
-    # note that we set the 404 status explicitly
-    return render_template('404.html'), 404
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error(f"Server Error: {error}")
+    return jsonify({'error': 'Internal server error occurred'}), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({'error': 'Resource not found'}), 404
+
+@app.errorhandler(401)
+def unauthorized_error(error):
+    return jsonify({'error': 'Unauthorized access'}), 401
 
 @app.route('/')  # connects default URL to index() function
 def index():
