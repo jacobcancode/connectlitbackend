@@ -65,10 +65,16 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
+        
+        # Check Authorization header
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
                 token = auth_header.split(' ')[1]
+        
+        # If no token in header, check cookies
+        if not token and 'jwt_token' in request.cookies:
+            token = request.cookies.get('jwt_token')
         
         if not token:
             if request.is_json:
@@ -298,30 +304,31 @@ def login():
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
             }, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
             
-            if request.is_json or request.headers.get('Accept') == 'application/json':
-                return jsonify({
-                    'token': token,
-                    'user': {
-                        'id': user.id,
-                        'username': user._name,
-                        'role': user._role
-                    }
-                })
+            # Always return JSON response for API requests
+            response = jsonify({
+                'token': token,
+                'user': {
+                    'id': user.id,
+                    'username': user._name,
+                    'role': user._role
+                }
+            })
             
-            login_user(user)
-            return redirect(next_page or url_for('index'))
+            # Set the token in a cookie for web requests
+            if not request.is_json and request.headers.get('Accept') != 'application/json':
+                response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='Strict')
+            
+            return response
         
-        if request.is_json or request.headers.get('Accept') == 'application/json':
-            return jsonify({'error': 'Invalid username or password'}), 401
-        
-        return render_template('login.html', error='Invalid username or password')
+        return jsonify({'error': 'Invalid username or password'}), 401
     
     return render_template('login.html', next=request.args.get('next'))
-    
+
 @app.route('/logout')
 def logout():
-    logout_user()
-    return redirect(url_for('login'))
+    response = redirect(url_for('login'))
+    response.delete_cookie('jwt_token')
+    return response
 
 @app.errorhandler(404)  # catch for URL not found
 def page_not_found(e):

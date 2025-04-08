@@ -54,8 +54,11 @@
                 const data = await response.json();
                 
                 if (response.ok && data.token) {
-                    // Store the token
+                    // Store the token in localStorage for API requests
                     localStorage.setItem('jwt_token', data.token);
+                    
+                    // Store the token in a cookie for web requests
+                    document.cookie = `jwt_token=${data.token}; path=/; secure; samesite=Strict`;
                     
                     // Redirect to the next page or home
                     window.location.href = next || '/';
