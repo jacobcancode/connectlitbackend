@@ -16,9 +16,11 @@
                 <div class="p-5 mb-4 bg-light text-dark rounded-3">
                     <form id="loginForm" name="f" action="{{ url_for('login') }}" method="POST">
                         <table>
-                            <tr id="errorRow" style="display: none;">
-                                <td colspan="2" class="alert alert-danger"></td>
-                            </tr>
+                            {% if error %}
+                                <tr class="alert alert-danger">
+                                    <td colspan="2">{{ error }}</td>
+                                </tr>
+                            {% endif %}
                             <tr><th><label for="username">User ID</label></th></tr>
                             <tr><td><input id='username' name="username" size="20" required></td></tr>
                             <tr><th><label for="password">Password</label></th></tr>
@@ -57,22 +59,21 @@
                     // Store the token in localStorage for API requests
                     localStorage.setItem('jwt_token', data.token);
                     
-                    // Store the token in a cookie for web requests
-                    document.cookie = `jwt_token=${data.token}; path=/; secure; samesite=Strict`;
-                    
                     // Redirect to the next page or home
                     window.location.href = next || '/';
                 } else {
                     // Show error message
-                    const errorRow = document.getElementById('errorRow');
-                    errorRow.style.display = 'table-row';
-                    errorRow.querySelector('td').textContent = data.error || 'Login failed';
+                    const errorRow = document.querySelector('.alert-danger');
+                    if (errorRow) {
+                        errorRow.textContent = data.error || 'Login failed';
+                    }
                 }
             } catch (error) {
                 console.error('Login Error:', error);
-                const errorRow = document.getElementById('errorRow');
-                errorRow.style.display = 'table-row';
-                errorRow.querySelector('td').textContent = 'An error occurred during login';
+                const errorRow = document.querySelector('.alert-danger');
+                if (errorRow) {
+                    errorRow.textContent = 'An error occurred during login';
+                }
             }
         });
     </script>

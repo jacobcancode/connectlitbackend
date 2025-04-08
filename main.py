@@ -287,6 +287,8 @@ def is_safe_url(target):
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
+from jwt_handler import generate_token, token_required
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -297,30 +299,31 @@ def login():
         user = User.query.filter_by(_name=username).first()
         if user and user.is_password(password):
             # Generate JWT token
-            token = jwt.encode({
-                'id': user.id,
-                'username': user._name,
-                'role': user._role,
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
-            }, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+            token = generate_token(user)
             
-            # Always return JSON response for API requests
-            response = jsonify({
+            # Create response
+            response_data = {
                 'token': token,
                 'user': {
                     'id': user.id,
                     'username': user._name,
                     'role': user._role
                 }
-            })
+            }
             
-            # Set the token in a cookie for web requests
-            if not request.is_json and request.headers.get('Accept') != 'application/json':
-                response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='Strict')
+            # For API requests, return JSON
+            if request.is_json or request.headers.get('Accept') == 'application/json':
+                return jsonify(response_data)
             
+            # For web requests, set cookie and redirect
+            response = redirect(next_page or url_for('index'))
+            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='Strict')
             return response
         
-        return jsonify({'error': 'Invalid username or password'}), 401
+        error_message = 'Invalid username or password'
+        if request.is_json or request.headers.get('Accept') == 'application/json':
+            return jsonify({'error': error_message}), 401
+        return render_template('login.html', error=error_message)
     
     return render_template('login.html', next=request.args.get('next'))
 

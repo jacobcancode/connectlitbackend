@@ -64,22 +64,9 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
     <!-- JWT Token Handling -->
     <script>
-        // Function to get the JWT token from localStorage or cookie
+        // Function to get the JWT token from localStorage
         function getToken() {
-            // Try localStorage first
-            let token = localStorage.getItem('jwt_token');
-            if (!token) {
-                // Try to get from cookie
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'jwt_token') {
-                        token = value;
-                        break;
-                    }
-                }
-            }
-            return token;
+            return localStorage.getItem('jwt_token');
         }
 
         // Function to check if user is logged in
@@ -89,10 +76,7 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
         // Function to log out
         function logout() {
-            // Remove from localStorage
             localStorage.removeItem('jwt_token');
-            // Remove cookie
-            document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=Strict';
             window.location.href = '/logout';
         }
 
