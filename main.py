@@ -61,8 +61,108 @@ app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 app.config['JWT_TOKEN_NAME'] = os.environ.get('JWT_TOKEN_NAME', 'jwt_token')
 
+def generate_token(user):
+    """
+    Generate a JWT token for the given user.
+    
+    Args:
+        user (User): The user object to generate the token for.
+        
+    Returns:
+        str: The generated JWT token.
+    """
+    try:
+        # Create the token payload
+        payload = {
+            'user_id': user.id,
+            'username': user._uid,
+            'exp': datetime.datetime.utcnow() + app.config['JWT_ACCESS_TOKEN_EXPIRES']
+        }
+        
+        # Generate the token
+        token = jwt.encode(
+            payload,
+            app.config['JWT_SECRET_KEY'],
+            algorithm=app.config['JWT_ALGORITHM']
+        )
+        
+        return token
+    except Exception as e:
+        app.logger.error(f"Token generation error: {str(e)}")
+        return None
+
+def token_required(f):
+    """
+    Decorator to require a valid JWT token for protected routes.
+    
+    Args:
+        f (function): The route function to protect.
+        
+    Returns:
+        function: The wrapped route function.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
+        
+        # Get token from cookie if not in header
+        if not token:
+            token = request.cookies.get(app.config['JWT_TOKEN_NAME'])
+        
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+            
+        try:
+            # Decode the token
+            payload = jwt.decode(
+                token,
+                app.config['JWT_SECRET_KEY'],
+                algorithms=[app.config['JWT_ALGORITHM']]
+            )
+            
+            # Get user from token
+            user = User.query.get(payload['user_id'])
+            if not user:
+                return jsonify({'error': 'User not found'}), 401
+                
+            # Add user to request context
+            request.user = user
+            
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+        except Exception as e:
+            app.logger.error(f"Token validation error: {str(e)}")
+            return jsonify({'error': 'Token validation failed'}), 401
+            
+        return f(*args, **kwargs)
+        
+    return decorated
+
 # Basic CORS configuration
-CORS(app)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:4888",
+            "http://127.0.0.1:4888",
+            "https://bookconnect-832734119496.us-west1.run.app",
+            "https://*.us-west1.run.app",  # Allow all subdomains of us-west1.run.app
+            "https://jacobcancode.github.io",  # GitHub Pages frontend
+            "https://*.github.io"  # Allow all GitHub Pages domains
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Authorization"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
 
 # Favicon route
 @app.route('/favicon.ico')
@@ -203,11 +303,20 @@ def login():
             if request.is_json or request.headers.get('Accept') == 'application/json':
                 response = jsonify(response_data)
                 response.headers['Authorization'] = f'Bearer {token}'
+                response.headers['Access-Control-Allow-Origin'] = '*'
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
                 return response
             
             # Handle web requests
             response = redirect(request.form.get('next') or url_for('index'))
-            response.set_cookie(app.config['JWT_TOKEN_NAME'], token, httponly=True, secure=True, samesite='None')
+            response.set_cookie(
+                app.config['JWT_TOKEN_NAME'],
+                token,
+                httponly=True,
+                secure=True,
+                samesite='None'
+            )
             return response
             
         except Exception as e:
