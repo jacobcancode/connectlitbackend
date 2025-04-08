@@ -119,6 +119,7 @@ def login():
             # Generate JWT token
             token = generate_token(user)
             if not token:
+                app.logger.error("Failed to generate JWT token")
                 return jsonify({'error': 'Failed to generate authentication token'}), 500
             
             # Create response data

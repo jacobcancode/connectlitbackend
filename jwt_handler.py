@@ -16,13 +16,13 @@ def generate_token(user):
         current_app.logger.error("JWT_SECRET_KEY is not set")
         return None
         
-    payload = {
-        'id': user.id,
-        'username': user._name,
-        'role': user._role,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=TOKEN_EXPIRATION_DAYS)
-    }
     try:
+        payload = {
+            'id': user.id,
+            'username': user._name,
+            'role': user._role,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=TOKEN_EXPIRATION_DAYS)
+        }
         token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
         return token
     except Exception as e:
