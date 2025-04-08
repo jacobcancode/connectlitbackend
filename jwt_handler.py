@@ -2,11 +2,11 @@ import jwt
 import datetime
 import os
 from functools import wraps
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, redirect, url_for
 from model.user import User
 
 # JWT Configuration
-JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-please-change-in-production')  # Change this in production
+JWT_SECRET_KEY = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
 JWT_ALGORITHM = 'HS256'
 TOKEN_EXPIRATION_DAYS = 1
 

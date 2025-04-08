@@ -307,6 +307,11 @@ def login():
         if user and user.is_password(password):
             # Generate JWT token
             token = generate_token(user)
+            if not token:
+                error_message = 'Failed to generate authentication token'
+                if request.is_json:
+                    return jsonify({'error': error_message}), 500
+                return render_template('login.html', error=error_message)
             
             # Create response data
             response_data = {
