@@ -64,24 +64,50 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 CORS(app)
 
 # Database setup
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///connectlit.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # Initialize database tables
 with app.app_context():
     try:
+        # Check if database exists and is accessible
+        db.engine.connect()
+        print("Database connection successful")
+        
+        # Create tables if they don't exist
         db.create_all()
-        print("Database tables created successfully")
-    except Exception as e:
-        print(f"Error creating database tables: {str(e)}")
-        # If there's an error, try to recreate the database
+        print("Database tables created/verified successfully")
+        
+        # Initialize default data if needed
         try:
-            db.drop_all()
-            db.create_all()
-            print("Database recreated successfully")
+            initUsers()
+            initSections()
+            initGroups()
+            initChannels()
+            initPosts()
+            initNestPosts()
+            initVotes()
+            initVehicles()
+            initDefaultUser()
+            print("Default data initialized successfully")
         except Exception as e:
-            print(f"Error recreating database: {str(e)}")
+            print(f"Warning: Error initializing default data: {str(e)}")
+            # Continue even if default data initialization fails
+            
+    except Exception as e:
+        print(f"Critical error: {str(e)}")
+        # Don't try to recreate the database in production
+        if os.environ.get('FLASK_ENV') == 'development':
+            try:
+                print("Attempting to recreate database in development mode...")
+                db.drop_all()
+                db.create_all()
+                print("Database recreated successfully")
+            except Exception as e:
+                print(f"Error recreating database: {str(e)}")
+        else:
+            print("Database initialization failed in production mode")
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -96,7 +122,28 @@ def load_user(user_id):
 @app.errorhandler(Exception)
 def handle_error(error):
     app.logger.error(f"Error: {str(error)}")
-    return jsonify({'error': 'An error occurred'}), 500
+    app.logger.error(f"Error type: {type(error)}")
+    app.logger.error(f"Error args: {error.args}")
+    
+    # Get the current request information
+    request_info = {
+        'method': request.method,
+        'url': request.url,
+        'headers': dict(request.headers),
+        'data': request.get_data().decode('utf-8') if request.get_data() else None,
+        'args': dict(request.args),
+        'form': dict(request.form) if request.form else None,
+        'json': request.get_json() if request.is_json else None
+    }
+    app.logger.error(f"Request info: {request_info}")
+    
+    # Return a more detailed error response
+    return jsonify({
+        'error': 'An error occurred',
+        'message': str(error),
+        'type': type(error).__name__,
+        'status_code': 500
+    }), 500
 
 # Basic request handling
 @app.before_request
