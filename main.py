@@ -59,6 +59,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
+app.config['JWT_TOKEN_NAME'] = os.environ.get('JWT_TOKEN_NAME', 'jwt_token')
 
 # Basic CORS configuration
 CORS(app)
@@ -116,7 +117,11 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    try:
+        return User.query.get(int(user_id))
+    except Exception as e:
+        print(f"Error loading user: {str(e)}")
+        return None
 
 # Simple error handler
 @app.errorhandler(Exception)
@@ -195,7 +200,7 @@ def login():
             
             # Handle web requests
             response = redirect(request.form.get('next') or url_for('index'))
-            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='None')
+            response.set_cookie(app.config['JWT_TOKEN_NAME'], token, httponly=True, secure=True, samesite='None')
             return response
             
         except Exception as e:
@@ -225,6 +230,23 @@ app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 app.register_blueprint(messages_api)
+
+# Root route
+@app.route('/')
+def index():
+    return jsonify({
+        'status': 'success',
+        'message': 'API is running',
+        'version': '1.0'
+    })
+
+# Health check route
+@app.route('/health')
+def health():
+    return jsonify({
+        'status': 'healthy',
+        'database': 'connected' if db.engine else 'disconnected'
+    })
 
 # Run the application
 if __name__ == "__main__":
