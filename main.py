@@ -3,18 +3,15 @@ import json
 import os
 import ast
 from urllib.parse import urljoin, urlparse
-from flask import abort, redirect, render_template, request, send_from_directory, url_for, jsonify  # import render_template from "public" flask libraries
-from flask_login import current_user, login_user, logout_user
+from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory, current_app
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_cors import CORS
 from flask.cli import AppGroup
-from flask_login import current_user, login_required
-from flask import current_app
 from werkzeug.security import generate_password_hash
 import shutil
 import datetime
 import jwt
 from functools import wraps
-
-
 
 # import "objects" from "this" project
 from __init__ import app, db, login_manager  # Key Flask objects 
@@ -56,8 +53,22 @@ from model.listings import UserItem, initDefaultUser
 from model.carComments import CarComments
 # server only Views
 
+# Initialize Flask app
+app = Flask(__name__)
+
+# Configure CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": ["https://jacobcancode.github.io", "https://bookconnect-832734119496.us-west1.run.app"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True,
+        "expose_headers": ["Authorization"]
+    }
+})
+
 # JWT Configuration
-JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
+JWT_SECRET_KEY = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
 JWT_ALGORITHM = 'HS256'
 
 # JWT Token Validation Decorator
@@ -323,13 +334,16 @@ def login():
                 }
             }
             
-            # For API requests, return JSON
+            # For API requests, return JSON with token in header
             if request.is_json or request.headers.get('Accept') == 'application/json':
-                return jsonify(response_data)
+                response = jsonify(response_data)
+                response.headers['Authorization'] = f'Bearer {token}'
+                response.headers['Access-Control-Expose-Headers'] = 'Authorization'
+                return response
             
             # For web requests, set cookie and redirect
             response = redirect(next_page or url_for('index'))
-            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='Strict')
+            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='None')
             return response
         
         error_message = 'Invalid username or password'
