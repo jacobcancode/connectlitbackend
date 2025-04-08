@@ -180,7 +180,7 @@ def login():
             if not username or not password:
                 return jsonify({'error': 'Username and password are required'}), 400
             
-            user = User.query.filter_by(_name=username).first()
+            user = User.query.filter_by(_uid=username).first()
             if not user or not user.is_password(password):
                 return jsonify({'error': 'Invalid username or password'}), 401
             
@@ -194,7 +194,8 @@ def login():
                 'token': token,
                 'user': {
                     'id': user.id,
-                    'username': user._name
+                    'username': user._uid,
+                    'name': user._name
                 }
             }
             

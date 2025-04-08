@@ -470,8 +470,15 @@ def initUsers():
         db.create_all()
         """Tester data for table"""
         
-        # Create admin user
-        admin = User(name='Thomas Edison', uid=app.config['ADMIN_USER'], password=app.config['ADMIN_PASSWORD'], pfp='toby.png', role="Admin")
+        # Create admin user first
+        admin = User(
+            name='Thomas Edison',
+            uid='toby',
+            email='toby@bookconnect.com',
+            password='123Toby!',
+            role='Admin',
+            pfp='https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+        )
         try:
             db.session.add(admin)
             db.session.commit()
