@@ -186,6 +186,9 @@ def initPosts():
     Instantiates:
         Post objects with tester data.
     
+    Returns:
+        list: A list of created Post objects.
+    
     Raises:
         IntegrityError: An error occurred when adding the tester data to the table.
     """        
@@ -199,11 +202,28 @@ def initPosts():
             Post(title='Allows Post by different Users', comment='Different users seeing content is a key concept in social media.', content={'type': 'announcement'}, user_id=2, channel_id=1),
         ]
         
+        created_posts = []
         for post in posts:
             try:
-                post.create()
+                db.session.add(post)
+                db.session.flush()  # Flush to get the post IDs
+                created_posts.append(post)
                 print(f"Record created: {repr(post)}")
             except IntegrityError:
-                '''fails with bad or duplicate data'''
-                db.session.remove()
-                print(f"Records exist, duplicate email, or error: {post._title}")
+                db.session.rollback()
+                print(f"Post already exists: {post.title}")
+                # Try to get the existing post
+                existing = Post.query.filter_by(_title=post._title, _user_id=post._user_id, _channel_id=post._channel_id).first()
+                if existing:
+                    created_posts.append(existing)
+                continue
+        
+        # Commit all changes at once
+        try:
+            db.session.commit()
+            print("All posts created successfully")
+            return created_posts
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing posts: {str(e)}")
+            return None

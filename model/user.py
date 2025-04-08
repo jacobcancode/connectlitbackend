@@ -470,14 +470,31 @@ def initUsers():
         db.create_all()
         """Tester data for table"""
         
-        u1 = User(name='Thomas Edison', uid=app.config['ADMIN_USER'], password=app.config['ADMIN_PASSWORD'], pfp='toby.png', role="Admin")
-        u2 = User(name='Grace Hopper', uid=app.config['DEFAULT_USER'], password=app.config['DEFAULT_PASSWORD'], pfp='hop.png')
-        u3 = User(name='Nicholas Tesla', uid='niko', password='123niko', pfp='niko.png' )
-        users = [u1, u2, u3]
+        # Create admin user
+        admin = User(name='Thomas Edison', uid=app.config['ADMIN_USER'], password=app.config['ADMIN_PASSWORD'], pfp='toby.png', role="Admin")
+        try:
+            db.session.add(admin)
+            db.session.commit()
+            print(f"Created admin user: {admin.name} ({admin.uid})")
+        except IntegrityError:
+            db.session.rollback()
+            print(f"Admin user already exists: {admin.name} ({admin.uid})")
+            admin = User.query.filter_by(_uid=app.config['ADMIN_USER']).first()
+        
+        # Create other users
+        users = [
+            User(name='Grace Hopper', uid=app.config['DEFAULT_USER'], password=app.config['DEFAULT_PASSWORD'], pfp='hop.png'),
+            User(name='Nicholas Tesla', uid='niko', password='123niko', pfp='niko.png')
+        ]
         
         for user in users:
             try:
-                user.create()
+                db.session.add(user)
+                db.session.commit()
+                print(f"Created user: {user.name} ({user.uid})")
             except IntegrityError:
-                '''fails with bad or duplicate data'''
-                db.session.remove()
+                db.session.rollback()
+                print(f"User already exists: {user.name} ({user.uid})")
+                continue
+        
+        return admin  # Return the admin user for use in other initialization functions

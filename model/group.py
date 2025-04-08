@@ -160,6 +160,9 @@ def initGroups():
     Instantiates:
         Group objects with tester data.
     
+    Returns:
+        list: A list of created Group objects.
+    
     Raises:
         IntegrityError: An error occurred when adding the tester data to the table.
     """
@@ -168,72 +171,107 @@ def initGroups():
         db.create_all()
         """Tester data for table"""
         
-        # Home Page Groups
+        # Get the admin user
+        admin = User.query.filter_by(_role="Admin").first()
+        if not admin:
+            print("Error: Admin user not found")
+            return None
+        
+        # Get all sections
         home_page_section = Section.query.filter_by(_name='Home Page').first()
-        groups = [
-            Group(name='General', section_id=home_page_section.id, moderators=[User.query.get(1)]),
-            Group(name='Support', section_id=home_page_section.id, moderators=[User.query.get(1)])
-        ]
+        shared_interest_section = Section.query.filter_by(_name='Shared Interest').first()
+        create_and_compete_section = Section.query.filter_by(_name='Create and Compete').first()
+        share_and_care = Section.query.filter_by(_name='Share and Care').first()
+        vote_for_the_goat_section = Section.query.filter_by(_name='Vote for the GOAT').first()
+        rate_and_relate_section = Section.query.filter_by(_name='Rate and Relate').first()
+        
+        # Create groups with their sections
+        groups = []
+        created_groups = []
+        
+        # Home Page Groups
+        if home_page_section:
+            groups.extend([
+                Group(name='General', section_id=home_page_section.id, moderators=[admin]),
+                Group(name='Support', section_id=home_page_section.id, moderators=[admin])
+            ])
         
         # Shared Interest Groups 
-        shared_interest_section = Section.query.filter_by(_name='Shared Interest').first()
-        groups += [
-            Group(name='Limitless Connections', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-            Group(name='DNHS Football', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-            Group(name='School Subjects', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-            Group(name='Music', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-            Group(name='Satire', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-            Group(name='Activity Hub', section_id=shared_interest_section.id, moderators=[User.query.get(1)]),
-        ]
+        if shared_interest_section:
+            groups.extend([
+                Group(name='Limitless Connections', section_id=shared_interest_section.id, moderators=[admin]),
+                Group(name='DNHS Football', section_id=shared_interest_section.id, moderators=[admin]),
+                Group(name='School Subjects', section_id=shared_interest_section.id, moderators=[admin]),
+                Group(name='Music', section_id=shared_interest_section.id, moderators=[admin]),
+                Group(name='Satire', section_id=shared_interest_section.id, moderators=[admin]),
+                Group(name='Activity Hub', section_id=shared_interest_section.id, moderators=[admin])
+            ])
 
         # Create and Compete Groups
-        create_and_compete_section = Section.query.filter_by(_name='Create and Compete').first()
-        groups += [
-            Group(name='Reality Room', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-            Group(name='Doodle', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-            Group(name='Elevator Pitch', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-            Group(name='Zoom n Guess', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-            Group(name='Culinary Posts', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-            Group(name='Riddle Room', section_id=create_and_compete_section.id, moderators=[User.query.get(1)]),
-        ]
+        if create_and_compete_section:
+            groups.extend([
+                Group(name='Reality Room', section_id=create_and_compete_section.id, moderators=[admin]),
+                Group(name='Doodle', section_id=create_and_compete_section.id, moderators=[admin]),
+                Group(name='Elevator Pitch', section_id=create_and_compete_section.id, moderators=[admin]),
+                Group(name='Zoom n Guess', section_id=create_and_compete_section.id, moderators=[admin]),
+                Group(name='Culinary Posts', section_id=create_and_compete_section.id, moderators=[admin]),
+                Group(name='Riddle Room', section_id=create_and_compete_section.id, moderators=[admin])
+            ])
         
         # Share and Care Groups
-        share_and_care = Section.query.filter_by(_name='Share and Care').first()
-        groups += [
-            Group(name='DNHS Cafe', section_id=share_and_care.id, moderators=[User.query.get(1)]),
-            Group(name='Cipher', section_id=share_and_care.id, moderators=[User.query.get(1)]),
-            Group(name='Chess Champion', section_id=share_and_care.id, moderators=[User.query.get(1)]),
-            Group(name='Underground Music', section_id=share_and_care.id, moderators=[User.query.get(1)]),
-            Group(name='The Hungry Games', section_id=share_and_care.id, moderators=[User.query.get(1)]),
-            Group(name='REVVIT', section_id=share_and_care.id, moderators=[User.query.get(1)])
-        ]
+        if share_and_care:
+            groups.extend([
+                Group(name='DNHS Cafe', section_id=share_and_care.id, moderators=[admin]),
+                Group(name='Cipher', section_id=share_and_care.id, moderators=[admin]),
+                Group(name='Chess Champion', section_id=share_and_care.id, moderators=[admin]),
+                Group(name='Underground Music', section_id=share_and_care.id, moderators=[admin]),
+                Group(name='The Hungry Games', section_id=share_and_care.id, moderators=[admin]),
+                Group(name='REVVIT', section_id=share_and_care.id, moderators=[admin])
+            ])
 
         # Vote for the GOAT Groups
-        vote_for_the_goat_section = Section.query.filter_by(_name='Vote for the GOAT').first()
-        groups += [
-            Group(name='Internet Debates', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='Calico Vote', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='Dnero Store', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='Beverage Debates', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='NFL GOATs', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='Genres', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)]),
-            Group(name='Car Debates', section_id=vote_for_the_goat_section.id, moderators=[User.query.get(1)])
-        ]
+        if vote_for_the_goat_section:
+            groups.extend([
+                Group(name='Internet Debates', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='Calico Vote', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='Dnero Store', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='Beverage Debates', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='NFL GOATs', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='Genres', section_id=vote_for_the_goat_section.id, moderators=[admin]),
+                Group(name='Car Debates', section_id=vote_for_the_goat_section.id, moderators=[admin])
+            ])
         
         # Rate and Relate Groups
-        rate_and_relate_section = Section.query.filter_by(_name='Rate and Relate').first()
-        groups += [
-            Group(name='Instabox', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
-            Group(name='Flavor Fusion', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
-            Group(name='Book Reviews', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
-            Group(name='Update The Nest', section_id=rate_and_relate_section.id, moderators=[User.query.get(1)]),
-        ]
+        if rate_and_relate_section:
+            groups.extend([
+                Group(name='Instabox', section_id=rate_and_relate_section.id, moderators=[admin]),
+                Group(name='Flavor Fusion', section_id=rate_and_relate_section.id, moderators=[admin]),
+                Group(name='Book Reviews', section_id=rate_and_relate_section.id, moderators=[admin]),
+                Group(name='Update The Nest', section_id=rate_and_relate_section.id, moderators=[admin])
+            ])
 
+        # Add all groups to the session at once
         for group in groups:
             try:
                 db.session.add(group)
-                db.session.commit()
+                db.session.flush()  # Flush to get the group IDs
+                created_groups.append(group)
                 print(f"Record created: {repr(group)}")
             except IntegrityError:
                 db.session.rollback()
-                print(f"Records exist, duplicate email, or error: {group._name}")
+                print(f"Group already exists: {group._name}")
+                # Try to get the existing group
+                existing = Group.query.filter_by(_name=group._name).first()
+                if existing:
+                    created_groups.append(existing)
+                continue
+        
+        # Commit all changes at once
+        try:
+            db.session.commit()
+            print("All groups created successfully")
+            return created_groups
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing groups: {str(e)}")
+            return None

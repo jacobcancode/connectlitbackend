@@ -142,6 +142,9 @@ def initChannels():
     Instantiates:
         Channel objects with tester data.
     
+    Returns:
+        list: A list of created Channel objects.
+    
     Raises:
         IntegrityError: An error occurred when adding the tester data to the table.
     """
@@ -150,87 +153,121 @@ def initChannels():
         db.create_all()
         """Tester data for table"""
 
-        # Home Page Channels
+        # Get all groups
         general = Group.query.filter_by(_name='General').first()
         support = Group.query.filter_by(_name='Support').first()
-        home_page_channels = [
-            Channel(name='Announcements', group_id=general.id),
-            Channel(name='Events', group_id=general.id),
-            Channel(name='FAQ', group_id=support.id),
-            Channel(name='Help Desk', group_id=support.id)
-        ]
-        
-        # Gas Car Channels 
-        sedan = Group.query.filter_by(_name='Sedan').first() 
-        truck = Group.query.filter_by(_name='Truck').first() 
-        muscle_car = Group.query.filter_by(_name='Muscle Car').first()
-        sports_car = Group.query.filter_by(_name='Sports Car').first()
-        gas_car_channels = [
-            Channel(name='2025 Hyundai Elantra', group_id=sedan.id),
-            Channel(name='Ford F150', group_id=truck.id),
-            Channel(name='Chevrolet Camero', group_id=muscle_car.id),
-            Channel(name='Porche 911', group_id=sports_car.id),
-        ]
-        
-        # Electric Car channels below:
-        DNHSCafe = Group.query.filter_by(_name='Study Room').first()
-        chess_forum = Group.query.filter_by(_name='Chess Forum').first()
-        Underground_Music = Group.query.filter_by(_name='Underground Music').first()
-        hybrid_car_channels = [
-            Channel(name='Math', group_id=DNHSCafe.id),
-            Channel(name='Chemistry', group_id=DNHSCafe.id),
-            Channel(name='Biology', group_id=DNHSCafe.id),
-            Channel(name='English', group_id=DNHSCafe.id),
-            Channel(name='Coding', group_id=DNHSCafe.id),
-            Channel(name='History', group_id=DNHSCafe.id),
-            Channel(name='General', group_id=chess_forum.id),
-            Channel(name='Chess Tips', group_id=chess_forum.id),
-            Channel(name='Game Updates', group_id=chess_forum.id),
-            Channel(name='Artists', group_id=Underground_Music.id),
-            Channel(name='Songs', group_id=Underground_Music.id),
-            Channel(name='Genres', group_id=Underground_Music.id),
-        ]
-
-        # Hybrid channels below:
-        internet_debates = Group.query.filter_by(_name='Internet Debates').first() 
-        calico_vote = Group.query.filter_by(_name='Calico Vote').first() 
+        chess_champion = Group.query.filter_by(_name='Chess Champion').first()
+        underground_music = Group.query.filter_by(_name='Underground Music').first()
+        internet_debates = Group.query.filter_by(_name='Internet Debates').first()
+        calico_vote = Group.query.filter_by(_name='Calico Vote').first()
         dnero_store = Group.query.filter_by(_name='Dnero Store').first()
-        beverage_debates = Group.query.filter_by(_name='Beverage Debates').first()
         nfl_goats = Group.query.filter_by(_name='NFL GOATs').first()
         car_debates = Group.query.filter_by(_name='Car Debates').first()
-        electric_car_channels = [
-            Channel(name='Milk vs Cereal', group_id=internet_debates.id),
-            Channel(name='Hot Dog Sandwich', group_id=internet_debates.id),
-            Channel(name='Pineapple on Pizza', group_id=internet_debates.id),
-            Channel(name='Cats vs Dogs', group_id=internet_debates.id),
-            Channel(name='Coffee or Tea', group_id=internet_debates.id),
-            Channel(name='Economy Cars', group_id=car_debates.id),
-            Channel(name='Luxury Cars', group_id=car_debates.id),
-            Channel(name='Vintage Cars', group_id=car_debates.id),
-            Channel(name='Student Cars', group_id=car_debates.id),
-            Channel(name='Adventure Play House', group_id=calico_vote.id),
-            Channel(name='Sylvanian Family Restraunt House', group_id=calico_vote.id),
-            Channel(name='Magical Mermaid Castle House', group_id=calico_vote.id),
-            Channel(name='Woody School House', group_id=calico_vote.id),
-            Channel(name='Spooky Suprise Haunted House', group_id=calico_vote.id),
-            Channel(name='Brick Oven Bakery House', group_id=calico_vote.id),
-            Channel(name='Food and Drink', group_id=dnero_store.id),
-            Channel(name='Spirit', group_id=dnero_store.id),
-            Channel(name='Limited Edition', group_id=dnero_store.id),
-            Channel(name='Quarterbacks', group_id=nfl_goats.id),
-            Channel(name='Running Backs', group_id=nfl_goats.id),
-            Channel(name='Wide Receivers', group_id=nfl_goats.id),
-            Channel(name='Defensive Players', group_id=nfl_goats.id),
-            Channel(name='NFL Divisions', group_id=nfl_goats.id),
-            Channel(name='Gift Cards', group_id=dnero_store.id),
-        ]
         
-        channels = home_page_channels + gas_car_channels + hybrid_car_channels + electric_car_channels
+        # Create channels for each group
+        channels = []
+        created_channels = []
+        
+        # Home Page Channels
+        if general:
+            channels.extend([
+                Channel(name='Announcements', group_id=general.id),
+                Channel(name='Events', group_id=general.id)
+            ])
+        
+        if support:
+            channels.extend([
+                Channel(name='FAQ', group_id=support.id),
+                Channel(name='Help Desk', group_id=support.id)
+            ])
+        
+        # Chess Champion Channels
+        if chess_champion:
+            channels.extend([
+                Channel(name='General', group_id=chess_champion.id),
+                Channel(name='Chess Tips', group_id=chess_champion.id),
+                Channel(name='Game Updates', group_id=chess_champion.id)
+            ])
+        
+        # Underground Music Channels
+        if underground_music:
+            channels.extend([
+                Channel(name='Artists', group_id=underground_music.id),
+                Channel(name='Songs', group_id=underground_music.id),
+                Channel(name='Genres', group_id=underground_music.id)
+            ])
+        
+        # Internet Debates Channels
+        if internet_debates:
+            channels.extend([
+                Channel(name='Milk vs Cereal', group_id=internet_debates.id),
+                Channel(name='Hot Dog Sandwich', group_id=internet_debates.id),
+                Channel(name='Pineapple on Pizza', group_id=internet_debates.id),
+                Channel(name='Cats vs Dogs', group_id=internet_debates.id),
+                Channel(name='Coffee or Tea', group_id=internet_debates.id)
+            ])
+        
+        # Calico Vote Channels
+        if calico_vote:
+            channels.extend([
+                Channel(name='Adventure Play House', group_id=calico_vote.id),
+                Channel(name='Sylvanian Family Restraunt House', group_id=calico_vote.id),
+                Channel(name='Magical Mermaid Castle House', group_id=calico_vote.id),
+                Channel(name='Woody School House', group_id=calico_vote.id),
+                Channel(name='Spooky Suprise Haunted House', group_id=calico_vote.id),
+                Channel(name='Brick Oven Bakery House', group_id=calico_vote.id)
+            ])
+        
+        # Dnero Store Channels
+        if dnero_store:
+            channels.extend([
+                Channel(name='Food and Drink', group_id=dnero_store.id),
+                Channel(name='Spirit', group_id=dnero_store.id),
+                Channel(name='Limited Edition', group_id=dnero_store.id),
+                Channel(name='Gift Cards', group_id=dnero_store.id)
+            ])
+        
+        # NFL GOATs Channels
+        if nfl_goats:
+            channels.extend([
+                Channel(name='Quarterbacks', group_id=nfl_goats.id),
+                Channel(name='Running Backs', group_id=nfl_goats.id),
+                Channel(name='Wide Receivers', group_id=nfl_goats.id),
+                Channel(name='Defensive Players', group_id=nfl_goats.id),
+                Channel(name='NFL Divisions', group_id=nfl_goats.id)
+            ])
+        
+        # Car Debates Channels
+        if car_debates:
+            channels.extend([
+                Channel(name='Economy Cars', group_id=car_debates.id),
+                Channel(name='Luxury Cars', group_id=car_debates.id),
+                Channel(name='Vintage Cars', group_id=car_debates.id),
+                Channel(name='Student Cars', group_id=car_debates.id)
+            ])
+        
+        # Add all channels to the session
         for channel in channels:
             try:
                 db.session.add(channel)
-                db.session.commit()
+                db.session.flush()  # Flush to get the channel IDs
+                created_channels.append(channel)
                 print(f"Record created: {repr(channel)}")
             except IntegrityError:
                 db.session.rollback()
-                print(f"Records exist, duplicate email, or error: {channel.name}")
+                print(f"Channel already exists: {channel.name}")
+                # Try to get the existing channel
+                existing = Channel.query.filter_by(_name=channel._name, _group_id=channel._group_id).first()
+                if existing:
+                    created_channels.append(existing)
+                continue
+        
+        # Commit all changes at once
+        try:
+            db.session.commit()
+            print("All channels created successfully")
+            return created_channels
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing channels: {str(e)}")
+            return None

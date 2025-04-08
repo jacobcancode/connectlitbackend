@@ -32,6 +32,46 @@ class Section(db.Model):
         self._name = name
         self._theme = theme
 
+    @property
+    def name(self):
+        """
+        Gets the section's name.
+        
+        Returns:
+            str: The section's name.
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """
+        Sets the section's name.
+        
+        Args:
+            name (str): The new name for the section.
+        """
+        self._name = name
+
+    @property
+    def theme(self):
+        """
+        Gets the section's theme.
+        
+        Returns:
+            str: The section's theme.
+        """
+        return self._theme
+
+    @theme.setter
+    def theme(self, theme):
+        """
+        Sets the section's theme.
+        
+        Args:
+            theme (str): The new theme for the section.
+        """
+        self._theme = theme
+
     def __repr__(self):
         """
         The __repr__ method is a special method used to represent the object in a string format.
@@ -126,6 +166,9 @@ def initSections():
     Instantiates:
         Section objects with tester data.
     
+    Returns:
+        list: A list of created Section objects.
+    
     Raises:
         IntegrityError: An error occurred when adding the tester data to the table.
     """
@@ -142,10 +185,19 @@ def initSections():
         s6 = Section(name='Rate and Relate')
         sections = [s1, s2, s3, s4, s5, s6]
         
+        created_sections = []
         for section in sections:
             try:
-                section.create()
+                db.session.add(section)
+                db.session.commit()
+                created_sections.append(section)
+                print(f"Created section: {section.name}")
             except IntegrityError:
-                '''fails with bad or duplicate data'''
-                db.session.remove()
-                print(f"Records exist, duplicate email, or error: {section._name}")
+                db.session.rollback()
+                print(f"Section already exists: {section._name}")
+                # Try to get the existing section
+                existing = Section.query.filter_by(_name=section._name).first()
+                if existing:
+                    created_sections.append(existing)
+        
+        return created_sections

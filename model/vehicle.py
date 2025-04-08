@@ -122,6 +122,12 @@ class Vehicle(db.Model):
 def initVehicles():
     """
     Initialize default vehicles and ensure the Vehicle table has valid data before inserting more entries.
+    
+    Returns:
+        list: A list of created Vehicle objects.
+    
+    Raises:
+        IntegrityError: An error occurred when adding the tester data to the table.
     """
     with app.app_context():
         db.create_all()
@@ -138,13 +144,28 @@ def initVehicles():
             )
         ]
 
+        created_vehicles = []
         for vehicle in vehicles:
             try:
-                vehicle.create()  # Assuming you have a `create()` method in your `Vehicle` class
-                print(f"Added vehicle: {vehicle.vin}")
-            except IntegrityError as e:
+                db.session.add(vehicle)
+                db.session.flush()  # Flush to get the vehicle IDs
+                created_vehicles.append(vehicle)
+                print(f"Record created: {repr(vehicle)}")
+            except IntegrityError:
                 db.session.rollback()
-                print(f"IntegrityError: {e} - Could not add vehicle {vehicle.vin}")
-            except Exception as e:
-                db.session.rollback()
-                print(f"Error: {e} - Could not add vehicle {vehicle.vin}")
+                print(f"Vehicle already exists: {vehicle.vin}")
+                # Try to get the existing vehicle
+                existing = Vehicle.query.filter_by(_vin=vehicle._vin).first()
+                if existing:
+                    created_vehicles.append(existing)
+                continue
+        
+        # Commit all changes at once
+        try:
+            db.session.commit()
+            print("All vehicles created successfully")
+            return created_vehicles
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing vehicles: {str(e)}")
+            return None

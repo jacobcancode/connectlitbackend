@@ -74,6 +74,12 @@ class Vote(db.Model):
 def initVotes():
     """
     Initialize the Vote table with any required starter data.
+    
+    Returns:
+        list: A list of created Vote objects.
+    
+    Raises:
+        IntegrityError: An error occurred when adding the tester data to the table.
     """
     with app.app_context():
         # Create database tables if they don't exist
@@ -85,11 +91,28 @@ def initVotes():
             Vote(vote_type='downvote', user_id=2, post_id=1),
         ]
         
+        created_votes = []
         for vote in votes:
             try:
                 db.session.add(vote)
-                db.session.commit()
+                db.session.flush()  # Flush to get the vote IDs
+                created_votes.append(vote)
                 print(f"Record created: {repr(vote)}")
             except IntegrityError:
                 db.session.rollback()
-                print(f"Duplicate or error: {repr(vote)}")
+                print(f"Vote already exists: {vote._vote_type} by user {vote._user_id} on post {vote._post_id}")
+                # Try to get the existing vote
+                existing = Vote.query.filter_by(_vote_type=vote._vote_type, _user_id=vote._user_id, _post_id=vote._post_id).first()
+                if existing:
+                    created_votes.append(existing)
+                continue
+        
+        # Commit all changes at once
+        try:
+            db.session.commit()
+            print("All votes created successfully")
+            return created_votes
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error committing votes: {str(e)}")
+            return None

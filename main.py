@@ -71,7 +71,7 @@ def favicon():
                              'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # Database setup
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///volumes/user_management.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
