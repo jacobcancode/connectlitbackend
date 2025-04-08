@@ -10,12 +10,8 @@
                     <h3 class="text-center">Login</h3>
                 </div>
                 <div class="card-body">
-                    {% if error %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endif %}
-                    <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                    <form id="loginForm" method="POST">
                         <input type="hidden" name="next" value="{{ next or '' }}">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
@@ -42,6 +38,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
     const next = document.querySelector('input[name="next"]').value;
+    const errorAlert = document.getElementById('errorAlert');
+    
+    // Clear any previous errors
+    errorAlert.classList.add('d-none');
+    errorAlert.textContent = '';
     
     try {
         const response = await fetch('/login', {
@@ -63,21 +64,13 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             window.location.href = next || '/';
         } else {
             // Show error message
-            const alertDiv = document.querySelector('.alert') || document.createElement('div');
-            alertDiv.className = 'alert alert-danger';
-            alertDiv.textContent = data.error || 'Login failed';
-            if (!document.querySelector('.alert')) {
-                document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
-            }
+            errorAlert.textContent = data.error || 'Login failed';
+            errorAlert.classList.remove('d-none');
         }
     } catch (error) {
         console.error('Error:', error);
-        const alertDiv = document.querySelector('.alert') || document.createElement('div');
-        alertDiv.className = 'alert alert-danger';
-        alertDiv.textContent = 'An error occurred during login';
-        if (!document.querySelector('.alert')) {
-            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
-        }
+        errorAlert.textContent = 'An error occurred during login';
+        errorAlert.classList.remove('d-none');
     }
 });
 </script>
