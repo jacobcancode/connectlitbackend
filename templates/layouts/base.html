@@ -64,17 +64,15 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
     <!-- JWT Token Handling -->
     <script>
-        // Function to get the JWT token from localStorage
+        // JWT Token handling
         function getToken() {
             return localStorage.getItem('jwt_token');
         }
 
-        // Function to check if user is logged in
         function isLoggedIn() {
             return !!getToken();
         }
 
-        // Function to log out
         function logout() {
             localStorage.removeItem('jwt_token');
             window.location.href = '/logout';
@@ -92,6 +90,18 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
             }
             return originalFetch(url, options);
         };
+
+        // Check login status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginStatus = document.getElementById('loginStatus');
+            if (loginStatus) {
+                if (isLoggedIn()) {
+                    loginStatus.innerHTML = '<a href="#" onclick="logout()">Logout</a>';
+                } else {
+                    loginStatus.innerHTML = '<a href="/login">Login</a>';
+                }
+            }
+        });
     </script>
 
 </body>

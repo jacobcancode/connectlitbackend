@@ -14,7 +14,7 @@ import jwt
 from functools import wraps
 
 # import "objects" from "this" project
-from __init__ import app, db, login_manager  # Key Flask objects 
+from __init__ import db  # Key Flask objects 
 # API endpoints
 from api.user import user_api 
 from api.pfp import pfp_api
@@ -35,8 +35,8 @@ from api.userCars import userCars_api
 from api.mechanicsTips import mechanicsTips_api
 from api.vinStore import vinStore_api
 from api.favorites import itemStore_api
-
 from api.vote import vote_api
+
 # database Initialization functions
 from model.carChat import carChat
 from model.mechanicsTips import MechanicsTip
@@ -51,10 +51,27 @@ from model.carPost import CarPost
 from model.vehicle import Vehicle, initVehicles
 from model.listings import UserItem, initDefaultUser
 from model.carComments import CarComments
-# server only Views
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
+
+# Initialize Login Manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@login_manager.unauthorized_handler
+def unauthorized_callback():
+    return redirect(url_for('login', next=request.path))
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
 
 # Configure CORS
 CORS(app, resources={
@@ -71,43 +88,81 @@ CORS(app, resources={
 JWT_SECRET_KEY = os.environ.get('SECRET_KEY')  # Use the SECRET_KEY from .env
 JWT_ALGORITHM = 'HS256'
 
-# JWT Token Validation Decorator
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
+# Helper function to check if the URL is safe for redirects
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+from jwt_handler import generate_token, token_required
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        # Get credentials from either form data or JSON
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+        else:
+            username = request.form.get('username')
+            password = request.form.get('password')
         
-        # Check Authorization header
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            if auth_header.startswith('Bearer '):
-                token = auth_header.split(' ')[1]
+        next_page = request.form.get('next') or request.args.get('next')
         
-        # If no token in header, check cookies
-        if not token and 'jwt_token' in request.cookies:
-            token = request.cookies.get('jwt_token')
+        user = User.query.filter_by(_name=username).first()
+        if user and user.is_password(password):
+            # Generate JWT token
+            token = generate_token(user)
+            if not token:
+                error_message = 'Failed to generate authentication token'
+                if request.is_json:
+                    return jsonify({'error': error_message}), 500
+                return render_template('login.html', error=error_message)
+            
+            # Create response data
+            response_data = {
+                'token': token,
+                'user': {
+                    'id': user.id,
+                    'username': user._name,
+                    'role': user._role
+                }
+            }
+            
+            # For API requests, return JSON with token in header
+            if request.is_json or request.headers.get('Accept') == 'application/json':
+                response = jsonify(response_data)
+                response.headers['Authorization'] = f'Bearer {token}'
+                response.headers['Access-Control-Expose-Headers'] = 'Authorization'
+                return response
+            
+            # For web requests, set cookie and redirect
+            response = redirect(next_page or url_for('index'))
+            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='None')
+            return response
         
-        if not token:
-            if request.is_json:
-                return jsonify({'message': 'Token is missing'}), 401
-            return redirect(url_for('login'))
-        
-        try:
-            data = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            current_user = User.query.get(data['id'])
-            if not current_user:
-                raise jwt.InvalidTokenError
-        except jwt.ExpiredSignatureError:
-            if request.is_json:
-                return jsonify({'message': 'Token has expired'}), 401
-            return redirect(url_for('login'))
-        except jwt.InvalidTokenError:
-            if request.is_json:
-                return jsonify({'message': 'Invalid token'}), 401
-            return redirect(url_for('login'))
-        
-        return f(current_user, *args, **kwargs)
-    return decorated
+        error_message = 'Invalid username or password'
+        if request.is_json or request.headers.get('Accept') == 'application/json':
+            return jsonify({'error': error_message}), 401
+        return render_template('login.html', error=error_message)
+    
+    return render_template('login.html', next=request.args.get('next'))
+
+@app.route('/logout')
+def logout():
+    response = redirect(url_for('login'))
+    response.delete_cookie('jwt_token')
+    return response
+
+@app.errorhandler(404)  # catch for URL not found
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('404.html'), 404
+
+@app.route('/')  # connects default URL to index() function
+def index():
+    return render_template("index.html")
 
 # register URIs for api endpoints
 app.register_blueprint(messages_api) # Adi added this, messages for his website
@@ -273,101 +328,6 @@ def get_data():
     })
     
     return jsonify(InfoDb)
-
-
-
-# Tell Flask-Login the view function name of your login route
-login_manager.login_view = "login"
-
-@login_manager.unauthorized_handler
-def unauthorized_callback():
-    return redirect(url_for('login', next=request.path))
-
-# register URIs for server pages
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-@app.context_processor
-def inject_user():
-    return dict(current_user=current_user)
-
-# Helper function to check if the URL is safe for redirects
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
-from jwt_handler import generate_token, token_required
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        # Get credentials from either form data or JSON
-        if request.is_json:
-            data = request.get_json()
-            username = data.get('username')
-            password = data.get('password')
-        else:
-            username = request.form.get('username')
-            password = request.form.get('password')
-        
-        next_page = request.form.get('next') or request.args.get('next')
-        
-        user = User.query.filter_by(_name=username).first()
-        if user and user.is_password(password):
-            # Generate JWT token
-            token = generate_token(user)
-            if not token:
-                error_message = 'Failed to generate authentication token'
-                if request.is_json:
-                    return jsonify({'error': error_message}), 500
-                return render_template('login.html', error=error_message)
-            
-            # Create response data
-            response_data = {
-                'token': token,
-                'user': {
-                    'id': user.id,
-                    'username': user._name,
-                    'role': user._role
-                }
-            }
-            
-            # For API requests, return JSON with token in header
-            if request.is_json or request.headers.get('Accept') == 'application/json':
-                response = jsonify(response_data)
-                response.headers['Authorization'] = f'Bearer {token}'
-                response.headers['Access-Control-Expose-Headers'] = 'Authorization'
-                return response
-            
-            # For web requests, set cookie and redirect
-            response = redirect(next_page or url_for('index'))
-            response.set_cookie('jwt_token', token, httponly=True, secure=True, samesite='None')
-            return response
-        
-        error_message = 'Invalid username or password'
-        if request.is_json or request.headers.get('Accept') == 'application/json':
-            return jsonify({'error': error_message}), 401
-        return render_template('login.html', error=error_message)
-    
-    return render_template('login.html', next=request.args.get('next'))
-
-@app.route('/logout')
-def logout():
-    response = redirect(url_for('login'))
-    response.delete_cookie('jwt_token')
-    return response
-
-@app.errorhandler(404)  # catch for URL not found
-def page_not_found(e):
-    # note that we set the 404 status explicitly
-    return render_template('404.html'), 404
-
-@app.route('/')  # connects default URL to index() function
-def index():
-    print("Home:", current_user)
-    return render_template("index.html")
 
 @app.route('/users/table')
 @login_required

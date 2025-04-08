@@ -2,83 +2,83 @@
 {% set project = "Login" %}
 
 {% block body %}
-    <!-- Start of body content specific to page -->
-    <div class="px-5 py-5 mx-auto">
-        <div class="container py-4">
-            <header class="pb-3 mb-4 border-bottom border-primary text-light">
-                <span class="fs-4">Login Page</span>
-            </header>
-        </div>
-    
-        <div class="container py-4 text-light bg-primary">
-    
-            <div class="container bg-secondary py-4">
-                <div class="p-5 mb-4 bg-light text-dark rounded-3">
-                    <form id="loginForm" name="f" action="{{ url_for('login') }}" method="POST">
-                        <table>
-                            {% if error %}
-                                <tr class="alert alert-danger">
-                                    <td colspan="2">{{ error }}</td>
-                                </tr>
-                            {% endif %}
-                            <tr><th><label for="username">User ID</label></th></tr>
-                            <tr><td><input id='username' name="username" size="20" required></td></tr>
-                            <tr><th><label for="password">Password</label></th></tr>
-                            <tr><td><input type="password" id="password" name="password" size="20" required></td></tr>
-                            <!-- Hidden input for 'next' page, which is set on unauthorized redirects -->
-                            <input type="hidden" name="next" value="{{ next }}">
-                            <tr><th><input type="submit" value="Submit"></th></tr>
-                        </table>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Login</h3>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+                        <input type="hidden" name="next" value="{{ next or '' }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const next = document.querySelector('input[name="next"]').value;
-            
-            try {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        password: password,
-                        next: next
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (response.ok && data.token) {
-                    // Store the token in localStorage for API requests
-                    localStorage.setItem('jwt_token', data.token);
-                    
-                    // Redirect to the next page or home
-                    window.location.href = next || '/';
-                } else {
-                    // Show error message
-                    const errorRow = document.querySelector('.alert-danger');
-                    if (errorRow) {
-                        errorRow.textContent = data.error || 'Login failed';
-                    }
-                }
-            } catch (error) {
-                console.error('Login Error:', error);
-                const errorRow = document.querySelector('.alert-danger');
-                if (errorRow) {
-                    errorRow.textContent = 'An error occurred during login';
-                }
-            }
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const next = document.querySelector('input[name="next"]').value;
+    
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
         });
-    </script>
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Store the token in localStorage
+            localStorage.setItem('jwt_token', data.token);
+            
+            // Redirect to the next page or home
+            window.location.href = next || '/';
+        } else {
+            // Show error message
+            const alertDiv = document.querySelector('.alert') || document.createElement('div');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.textContent = data.error || 'Login failed';
+            if (!document.querySelector('.alert')) {
+                document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        const alertDiv = document.querySelector('.alert') || document.createElement('div');
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.textContent = 'An error occurred during login';
+        if (!document.querySelector('.alert')) {
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+        }
+    }
+});
+</script>
 {% endblock %}
