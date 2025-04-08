@@ -15,5 +15,5 @@ for i in range(6, 28, 4):
     draw.line([8, i, 28, i], fill=(200, 200, 200))
 
 # Save the image
-os.makedirs('static/images', exist_ok=True)
-img.save('static/images/favicon.ico', format='ICO', sizes=[(32, 32)]) 
+os.makedirs('static', exist_ok=True)
+img.save('static/favicon.ico', format='ICO', sizes=[(32, 32)]) 

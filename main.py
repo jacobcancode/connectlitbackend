@@ -64,6 +64,12 @@ app.config['JWT_TOKEN_NAME'] = os.environ.get('JWT_TOKEN_NAME', 'jwt_token')
 # Basic CORS configuration
 CORS(app)
 
+# Favicon route
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                             'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 # Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///:memory:')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
