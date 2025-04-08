@@ -60,15 +60,8 @@ app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECR
 app.config['JWT_ALGORITHM'] = 'HS256'
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
 
-# Configure CORS
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:8080", "https://connectlitbackend-7j3q3x3q3q-uc.a.run.app"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
+# Basic CORS configuration
+CORS(app)
 
 # Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///connectlit.db')
@@ -84,22 +77,19 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@login_manager.unauthorized_handler
-def unauthorized_callback():
-    return redirect(url_for('login', next=request.path))
+# Simple error handler
+@app.errorhandler(Exception)
+def handle_error(error):
+    app.logger.error(f"Error: {str(error)}")
+    return jsonify({'error': 'An error occurred'}), 500
 
-@app.context_processor
-def inject_user():
-    return dict(current_user=current_user)
+# Basic request handling
+@app.before_request
+def before_request():
+    if request.method == 'OPTIONS':
+        return '', 200
 
-# Helper function to check if the URL is safe for redirects
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
-from jwt_handler import generate_token, token_required
-
+# Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -152,39 +142,14 @@ def login():
     
     return render_template('login.html', next=request.args.get('next'))
 
-@app.route('/logout')
-def logout():
-    response = redirect(url_for('login'))
-    response.delete_cookie('jwt_token')
-    return response
-
-@app.errorhandler(500)
-def internal_error(error):
-    app.logger.error(f"Server Error: {error}")
-    return jsonify({'error': 'Internal server error occurred'}), 500
-
-@app.errorhandler(404)
-def not_found_error(error):
-    return jsonify({'error': 'Resource not found'}), 404
-
-@app.errorhandler(401)
-def unauthorized_error(error):
-    return jsonify({'error': 'Unauthorized access'}), 401
-
-@app.route('/')  # connects default URL to index() function
-def index():
-    return render_template("index.html")
-
-# register URIs for api endpoints
-app.register_blueprint(messages_api) # Adi added this, messages for his website
+# Register blueprints
 app.register_blueprint(user_api)
-app.register_blueprint(pfp_api) 
+app.register_blueprint(pfp_api)
 app.register_blueprint(post_api)
 app.register_blueprint(channel_api)
 app.register_blueprint(group_api)
 app.register_blueprint(section_api)
 app.register_blueprint(carChat_api)
-# Added new files to create nestPosts, uses a different format than Mortensen and didn't want to touch his junk
 app.register_blueprint(nestPost_api)
 app.register_blueprint(nestImg_api)
 app.register_blueprint(vote_api)
@@ -197,292 +162,11 @@ app.register_blueprint(userCars_api)
 app.register_blueprint(mechanicsTips_api)
 app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
+app.register_blueprint(messages_api)
 
-@app.route('/carPosts')
-@token_required
-def carPosts(current_user):
-    carPost_data = CarPost.query.all()  # Fetch all car posts from the database
-    print("Car Post Data:", carPost_data)  # Debugging line to check if data is fetched
-    return render_template("carPosts.html", carPost_data=carPost_data)
-
-@app.route('/carChat')
-@token_required
-def carChatPage(current_user):
-    carChat_data = carChat.query.all()  # Fetch all car chat messages from the database
-    print("Car Chat Data:", carChat_data)  # Debugging line to check if data is fetched
-    return render_template("carChat.html", carChat_data=carChat_data)
-
-@app.route('/carComments')
-@token_required
-def carCommentsPage(current_user):
-    carComments_data = CarComments.query.all()  # Fetch all car comments from the database
-    print("Car Comments Data:", carComments_data)  # Debugging line to check if data is fetched
-    return render_template("carComments.html", carComments_data=carComments_data)
-
-@app.route('/mechanicsTips')
-@login_required  # Ensure that only logged-in users can access this page
-def mechanicsTipsPage():
-    mechanicsTips_data = MechanicsTip.query.all()  # Fetch all mechanics tips from the database
-    print("Mechanics Tips Data:", mechanicsTips_data)  # Debugging line to check if data is fetched
-    return render_template("mechanicsTips.html", mechanicsTips_data=mechanicsTips_data)
-
-@app.route('/listings')
-@login_required  # Ensure that only logged-in users can access this page
-def listingsPage():
-    listings_data = UserItem.query.all()  # Fetch all listings from the database
-    print("Listings Data:", listings_data)  # Debugging line to check if data is fetched
-    return render_template("listings.html", listings_data=listings_data)
-
-@app.route('/vehicles')
-@login_required  # Ensure that only logged-in users can access this page
-def vehiclesPage():
-    vehicles_data = Vehicle.query.all()  # Fetch all vehicles from the database
-    print("Vehicles Data:", vehicles_data)  # Debugging line to check if data is fetched
-    return render_template("vehicles.html", vehicles_data=vehicles_data)
-
-
-@app.route('/carChat/<int:id>', methods=['PUT'])
-def edit_chat_message(id):
-    data = request.get_json()  # Get the JSON data from the request
-    message = carChat.query.get(id)  # Find the message by ID
-    
-    if message is None:
-        return jsonify({"error": "Message not found"}), 404  # Return 404 if message doesn't exist
-    
-    # Update the message content
-    message._message = data.get('message', message._message)  # Update with new message content
-    message.update()  # Call the update method from the model
-    
-    return jsonify(message.read()), 200  # Return the updated message data
-
-@app.route('/carChat/<int:id>', methods=['DELETE'])
-def delete_chat_message(id):
-    message = carChat.query.get(id)
-    
-    if message:
-        message.delete()  # Call the delete method from the model
-        return jsonify({"message": "Message deleted"}), 200
-    else:
-        return jsonify({"error": "Message not found"}), 404
-
-from api.listings import fetch_listings
-@app.route('/api/fetchListings', methods=['GET'])
-def fetchListings():
-    cars = fetch_listings(2)
-    return jsonify([car for car in cars])
-
-@app.route('/api/carPost/allPosts/<string:car_type>', methods=['GET'])
-def allPosts(car_type):
-    if car_type not in ['gas', 'electric', 'hybrid', 'dream']:
-        return jsonify({'message': 'Car type must be one of gas, electric, hybrid, dream'}), 400
-    posts = CarPost.query.filter(CarPost._car_type == car_type).all()
-    return jsonify([post.read() for post in posts])
-
-@app.route('/api/carPost/postsByUser/<int:user_id>', methods=['GET'])
-def postsByUser(user_id):
-    user = User.query.get(user_id)
-    if user is None:
-        return jsonify({'message': 'User not found'}), 404
-    posts = CarPost.query.filter(CarPost._uid == user_id).all()
-    return jsonify([post.read() for post in posts])
-
-from model.carPostImage import carPostImage_base64_decode, carPostImage_base64_upload
-
-@app.route('/api/carPost/<int:post_id>/images', methods=['GET'])
-def getPostImages(post_id):
-    post = CarPost.query.get(post_id)
-    if post is None:
-        return jsonify({'message': 'Post not found'}), 404
-    image_url_table = post._image_url_table
-    if not image_url_table or len(image_url_table) == 0:
-        return jsonify({'message': 'There are no images for this post.'}), 404
-    
-    images = []
-    for url in ast.literal_eval(image_url_table):
-        print(url)
-        image = carPostImage_base64_decode(post_id, url)
-        images.append(image)
-        
-    return jsonify(images)
-
-@app.route('/api/carComment/<int:post_id>', methods=['GET'])
-def getPostComments(post_id):
-    post = CarPost.query.get(post_id)
-    if post is None:
-        return jsonify({'message': 'Post not found'}), 404
-    comments = CarComments.query.filter(CarComments._post_id == post_id).all()
-    return jsonify([comment.read() for comment in comments])
-
-@app.route('/api/data/mort', methods=['GET'])
-def get_data():
-    # start a list, to be used like a information database
-    InfoDb = []
-
-    # add a row to list, an Info record
-    InfoDb.append({
-        "FirstName": "John",
-        "LastName": "Mortensen",
-        "DOB": "October 21",
-        "Residence": "San Diego",
-        "Email": "jmortensen@powayusd.com",
-        "Owns_Cars": ["2015-Fusion", "2011-Ranger", "2003-Excursion", "1997-F350", "1969-Cadillac"]
-    })
-
-    # add a row to list, an Info record
-    InfoDb.append({
-        "FirstName": "Shane",
-        "LastName": "Lopez",
-        "DOB": "February 27",
-        "Residence": "San Diego",
-        "Email": "slopez@powayusd.com",
-        "Owns_Cars": ["2021-Insight"]
-    })
-    
-    return jsonify(InfoDb)
-
-@app.route('/users/table')
-@login_required
-def utable():
-    users = User.query.all()
-    return render_template("utable.html", user_data=users)
-
-@app.route('/users/table2')
-@login_required
-def u2table():
-    users = User.query.all()
-    return render_template("u2table.html", user_data=users)
-
-# Helper function to extract uploads for a user (ie PFP image)
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
- 
-@app.route('/users/delete/<int:user_id>', methods=['DELETE'])
-@login_required
-def delete_user(user_id):
-    user = User.query.get(user_id)
-    if user:
-        user.delete()
-        return jsonify({'message': 'User deleted successfully'}), 200
-    return jsonify({'error': 'User not found'}), 404
-
-@app.route('/users/reset_password/<int:user_id>', methods=['POST'])
-@login_required
-def reset_password(user_id):
-    if current_user.role != 'Admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-
-    # Set the new password
-    if user.update({"password": app.config['DEFAULT_PASSWORD']}):
-        return jsonify({'message': 'Password reset successfully'}), 200
-    return jsonify({'error': 'Password reset failed'}), 500
-
-# Create an AppGroup for custom commands
-custom_cli = AppGroup('custom', help='Custom commands')
-
-# Define a command to run the data generation functions
-@custom_cli.command('generate_data')
-def generate_data():
-    initDefaultUser()
-    initUsers()
-    initSections()
-    initVehicles()
-    
-# Backup the old database
-def backup_database(db_uri, backup_uri):
-    """Backup the current database."""
-    if backup_uri:
-        db_path = db_uri.replace('sqlite:///', 'instance/')
-        backup_path = backup_uri.replace('sqlite:///', 'instance/')
-        shutil.copyfile(db_path, backup_path)
-        print(f"Database backed up to {backup_path}")
-    else:
-        print("Backup not supported for production database.")
-
-# Extract data from the existing database
-def extract_data():
-    data = {}
-    with app.app_context():
-        data['users'] = [user.read() for user in User.query.all()]
-        data['sections'] = [section.read() for section in Section.query.all()]
-        data['groups'] = [group.read() for group in Group.query.all()]
-        data['channels'] = [channel.read() for channel in Channel.query.all()]
-        data['posts'] = [post.read() for post in Post.query.all()]
-        data['carPosts'] = [post.read() for post in CarPost.query.all()]
-        data['user_items'] = [post.read() for post in UserItem.query.all()]
-        data['vehicles'] = [vehicle.read() for vehicle in Vehicle.query.all()]
-        data['carComments'] = [comment.read() for comment in CarComments.query.all()]
-    return data
-
-# Save extracted data to JSON files
-def save_data_to_json(data, directory='backup'):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    for table, records in data.items():
-        with open(os.path.join(directory, f'{table}.json'), 'w') as f:
-            for record in records:
-                if record.get('date_posted'):
-                    record['date_posted'] = record['date_posted'].isoformat()
-                if record.get('date_added'):
-                    if type(record['date_added']) != str:
-                        record['date_added'] = record['date_added'].isoformat()
-            json.dump(records, f)
-    print(f"Data backed up to {directory} directory.")
-
-# Load data from JSON files
-def load_data_from_json(directory='backup'):
-    data = {}
-    for table in ['users', 'sections', 'groups', 'channels', 'posts', 'carPosts', 'user_items', 'vehicles', 'carComments']:
-        with open(os.path.join(directory, f'{table}.json'), 'r') as f:
-            data[table] = json.load(f)
-    return data
-
-# Restore data to the new database
-def restore_data(data):
-    with app.app_context():
-        users = User.restore(data['users'])
-        _ = Section.restore(data['sections'])
-        _ = Group.restore(data['groups'], users)
-        _ = Channel.restore(data['channels'])
-        _ = Post.restore(data['posts'])
-        _ = UserItem.restore(data['user_items'])
-        _ = CarPost.restore(data['carPosts'])
-        _ = Vehicle.restore(data['vehicles'])
-        _ = CarComments.restore(data['carComments'])
-    print("Data restored to the new database.")
-
-# Define a command to backup data
-@custom_cli.command('backup_data')
-def backup_data():
-    data = extract_data()
-    save_data_to_json(data)
-    backup_database(app.config['SQLALCHEMY_DATABASE_URI'], app.config['SQLALCHEMY_BACKUP_URI'])
-
-# Define a command to restore data
-@custom_cli.command('restore_data')
-def restore_data_command():
-    data = load_data_from_json()
-    restore_data(data)
-    
-# Register the custom command group with the Flask application
-app.cli.add_command(custom_cli)
-        
-# this runs the flask application on the development server
+# Run the application
 if __name__ == "__main__":
-    # Development configuration
-    app.config['SESSION_COOKIE_SECURE'] = False
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.run(debug=True, host="0.0.0.0", port="8080")
-else:
-    # Production configuration
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 
 # @app.route('/api/mechanicsTips', methods=['GET'])
