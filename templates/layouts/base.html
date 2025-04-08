@@ -111,8 +111,9 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
 
 {% block background %}
     <script src="{{ url_for('static', filename='js/three.r119.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vanta.rings.min.js') }}"></script>
     <script>
-        VANTA.BIRDS({
+        VANTA.RINGS({
             el: "#body_background",
             mouseControls: true,
             touchControls: true,
@@ -120,7 +121,8 @@ This HTML is setup as as a Jinja2 layout, coders use layouts for:
             minHeight: 200.00,
             minWidth: 200.00,
             scale: 1.00,
-            scaleMobile: 1.00
+            scaleMobile: 1.00,
+            backgroundColor: 0x0
         })
     </script>
 {% endblock %}

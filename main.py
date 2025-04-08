@@ -240,11 +240,7 @@ app.register_blueprint(messages_api)
 # Root route
 @app.route('/')
 def index():
-    return jsonify({
-        'status': 'success',
-        'message': 'API is running',
-        'version': '1.0'
-    })
+    return render_template('index.html')
 
 # Health check route
 @app.route('/health')

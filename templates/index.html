@@ -2,7 +2,7 @@
 {% set project = "Home" %}
 
 {% block head %}
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
         body {
             margin: 0;
