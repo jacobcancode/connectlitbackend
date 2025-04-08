@@ -1,11 +1,12 @@
 import jwt
 import datetime
+import os
 from functools import wraps
 from flask import request, jsonify, current_app
 from model.user import User
 
 # JWT Configuration
-JWT_SECRET_KEY = 'your-secret-key'  # Change this in production
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-please-change-in-production')  # Change this in production
 JWT_ALGORITHM = 'HS256'
 TOKEN_EXPIRATION_DAYS = 1
 
@@ -17,7 +18,12 @@ def generate_token(user):
         'role': user._role,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=TOKEN_EXPIRATION_DAYS)
     }
-    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    try:
+        token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+        return token
+    except Exception as e:
+        print(f"Error generating token: {e}")
+        return None
 
 def decode_token(token):
     """Decode and validate a JWT token."""
@@ -25,8 +31,13 @@ def decode_token(token):
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
+        print("Token has expired")
         return None
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        print(f"Invalid token: {e}")
+        return None
+    except Exception as e:
+        print(f"Error decoding token: {e}")
         return None
 
 def get_token_from_request():
@@ -48,19 +59,19 @@ def token_required(f):
         if not token:
             if request.is_json:
                 return jsonify({'message': 'Token is missing'}), 401
-            return jsonify({'message': 'Token is missing'}), 401
+            return redirect(url_for('login'))
         
         payload = decode_token(token)
         if not payload:
             if request.is_json:
                 return jsonify({'message': 'Invalid or expired token'}), 401
-            return jsonify({'message': 'Invalid or expired token'}), 401
+            return redirect(url_for('login'))
         
         user = User.query.get(payload['id'])
         if not user:
             if request.is_json:
                 return jsonify({'message': 'User not found'}), 401
-            return jsonify({'message': 'User not found'}), 401
+            return redirect(url_for('login'))
         
         return f(user, *args, **kwargs)
     return decorated

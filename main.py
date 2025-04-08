@@ -292,16 +292,23 @@ from jwt_handler import generate_token, token_required
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        next_page = request.form.get('next')
+        # Get credentials from either form data or JSON
+        if request.is_json:
+            data = request.get_json()
+            username = data.get('username')
+            password = data.get('password')
+        else:
+            username = request.form.get('username')
+            password = request.form.get('password')
+        
+        next_page = request.form.get('next') or request.args.get('next')
         
         user = User.query.filter_by(_name=username).first()
         if user and user.is_password(password):
             # Generate JWT token
             token = generate_token(user)
             
-            # Create response
+            # Create response data
             response_data = {
                 'token': token,
                 'user': {
