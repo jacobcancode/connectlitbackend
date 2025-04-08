@@ -54,22 +54,21 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             body: JSON.stringify({ username, password })
         });
         
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Login failed');
+        }
+        
         const data = await response.json();
         
-        if (response.ok) {
-            // Store the token in localStorage
-            localStorage.setItem('jwt_token', data.token);
-            
-            // Redirect to the next page or home
-            window.location.href = next || '/';
-        } else {
-            // Show error message
-            errorAlert.textContent = data.error || 'Login failed';
-            errorAlert.classList.remove('d-none');
-        }
+        // Store the token in localStorage
+        localStorage.setItem('jwt_token', data.token);
+        
+        // Redirect to the next page or home
+        window.location.href = next || '/';
     } catch (error) {
         console.error('Error:', error);
-        errorAlert.textContent = 'An error occurred during login';
+        errorAlert.textContent = error.message || 'An error occurred during login';
         errorAlert.classList.remove('d-none');
     }
 });

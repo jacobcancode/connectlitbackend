@@ -12,6 +12,10 @@ TOKEN_EXPIRATION_DAYS = 1
 
 def generate_token(user):
     """Generate a JWT token for the given user."""
+    if not JWT_SECRET_KEY:
+        current_app.logger.error("JWT_SECRET_KEY is not set")
+        return None
+        
     payload = {
         'id': user.id,
         'username': user._name,
@@ -22,22 +26,26 @@ def generate_token(user):
         token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
         return token
     except Exception as e:
-        print(f"Error generating token: {e}")
+        current_app.logger.error(f"Error generating token: {str(e)}")
         return None
 
 def decode_token(token):
     """Decode and validate a JWT token."""
+    if not JWT_SECRET_KEY:
+        current_app.logger.error("JWT_SECRET_KEY is not set")
+        return None
+        
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
-        print("Token has expired")
+        current_app.logger.warning("Token has expired")
         return None
     except jwt.InvalidTokenError as e:
-        print(f"Invalid token: {e}")
+        current_app.logger.warning(f"Invalid token: {str(e)}")
         return None
     except Exception as e:
-        print(f"Error decoding token: {e}")
+        current_app.logger.error(f"Error decoding token: {str(e)}")
         return None
 
 def get_token_from_request():
