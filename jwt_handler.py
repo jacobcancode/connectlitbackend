@@ -23,7 +23,11 @@ def generate_token(user):
             'role': user._role,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=TOKEN_EXPIRATION_DAYS)
         }
-        token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+        token = jwt.encode(
+            payload=payload,
+            key=JWT_SECRET_KEY,
+            algorithm=JWT_ALGORITHM
+        )
         return token
     except Exception as e:
         current_app.logger.error(f"Error generating token: {str(e)}")
@@ -36,7 +40,11 @@ def decode_token(token):
         return None
         
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(
+            jwt=token,
+            key=JWT_SECRET_KEY,
+            algorithms=[JWT_ALGORITHM]
+        )
         return payload
     except jwt.ExpiredSignatureError:
         current_app.logger.warning("Token has expired")
