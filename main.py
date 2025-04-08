@@ -254,13 +254,21 @@ def before_request():
         return '', 200
 
 # Login route
-@app.route('/api/authenticate', methods=['POST', 'OPTIONS'])
+@app.route('/api/authenticate', methods=['GET', 'POST', 'OPTIONS'])
 def login():
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+
+    if request.method == 'GET':
+        # Return a simple response for GET requests
+        response = jsonify({'status': 'ok', 'message': 'Authentication endpoint is available'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         return response
 
     if request.method == 'POST':
@@ -300,7 +308,7 @@ def login():
             response = jsonify(response_data)
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-            response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
             response.headers['Authorization'] = f'Bearer {token}'
             return response
             
@@ -309,7 +317,7 @@ def login():
             response = jsonify({'error': 'An error occurred during login'})
             response.headers.add('Access-Control-Allow-Origin', '*')
             response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-            response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
             return response, 500
 
     return jsonify({'error': 'Method not allowed'}), 405
