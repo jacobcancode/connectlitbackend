@@ -145,22 +145,13 @@ def token_required(f):
         
     return decorated
 
-# Basic CORS configuration
+# Configure CORS
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "http://localhost:4888",
-            "http://127.0.0.1:4888",
-            "https://bookconnect-832734119496.us-west1.run.app",
-            "https://*.us-west1.run.app",  # Allow all subdomains of us-west1.run.app
-            "https://jacobcancode.github.io",  # GitHub Pages frontend
-            "https://*.github.io"  # Allow all GitHub Pages domains
-        ],
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "expose_headers": ["Authorization"],
-        "supports_credentials": True,
-        "max_age": 3600
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "supports_credentials": True
     }
 })
 
@@ -263,8 +254,15 @@ def before_request():
         return '', 200
 
 # Login route
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/api/authenticate', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
+
     if request.method == 'POST':
         try:
             # Get credentials from request
@@ -299,31 +297,22 @@ def login():
                 }
             }
             
-            # Handle API requests
-            if request.is_json or request.headers.get('Accept') == 'application/json':
-                response = jsonify(response_data)
-                response.headers['Authorization'] = f'Bearer {token}'
-                response.headers['Access-Control-Allow-Origin'] = '*'
-                response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-                response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-                return response
-            
-            # Handle web requests
-            response = redirect(request.form.get('next') or url_for('index'))
-            response.set_cookie(
-                app.config['JWT_TOKEN_NAME'],
-                token,
-                httponly=True,
-                secure=True,
-                samesite='None'
-            )
+            response = jsonify(response_data)
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            response.headers['Authorization'] = f'Bearer {token}'
             return response
             
         except Exception as e:
             app.logger.error(f"Login error: {str(e)}")
-            return jsonify({'error': 'An error occurred during login'}), 500
-    
-    return render_template('login.html', next=request.args.get('next'))
+            response = jsonify({'error': 'An error occurred during login'})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            return response, 500
+
+    return jsonify({'error': 'Method not allowed'}), 405
 
 # Register blueprints
 app.register_blueprint(user_api)
