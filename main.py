@@ -54,7 +54,11 @@ from model.listings import UserItem, initDefaultUser
 from model.carComments import CarComments
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, 
+    static_url_path='',
+    static_folder='static',
+    template_folder='templates'
+)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECRET_KEY'])
 app.config['JWT_ALGORITHM'] = 'HS256'
@@ -155,11 +159,15 @@ CORS(app, resources={
     }
 })
 
+# Serve static files
+@app.route('/static/<path:path>')
+def serve_static(path):
+    return send_from_directory('static', path)
+
 # Favicon route
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'),
-                             'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 # Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///volumes/user_management.db'
@@ -256,6 +264,10 @@ def before_request():
 # Login page route
 @app.route('/login', methods=['GET'])
 def login_page():
+    # Check if user is already authenticated
+    token = request.cookies.get(app.config['JWT_TOKEN_NAME'])
+    if token:
+        return redirect(url_for('index'))
     return render_template('login.html')
 
 # API authentication route
@@ -352,6 +364,10 @@ app.register_blueprint(messages_api)
 # Root route
 @app.route('/')
 def index():
+    # Check if user is authenticated
+    token = request.cookies.get(app.config['JWT_TOKEN_NAME'])
+    if not token:
+        return redirect(url_for('login_page'))
     return render_template('index.html')
 
 # Health check route
