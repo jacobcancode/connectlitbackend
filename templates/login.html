@@ -14,18 +14,11 @@
     
             <div class="container bg-secondary py-4">
                 <div class="p-5 mb-4 bg-light text-dark rounded-3">
-                    <form name="f" action="{{ url_for('login') }}" method="POST">
+                    <form id="loginForm" name="f" action="{{ url_for('login') }}" method="POST">
                         <table>
-                            {% if error %}
-                                <tr class="alert alert-error">
-                                    Invalid username and password.
-                                </tr>
-                            {% endif %}
-                            {% if logout %}
-                                <tr class="alert alert-success">
-                                    You have been logged out.
-                                </tr>
-                            {% endif %}
+                            <tr id="errorRow" style="display: none;">
+                                <td colspan="2" class="alert alert-danger"></td>
+                            </tr>
                             <tr><th><label for="username">User ID</label></th></tr>
                             <tr><td><input id='username' name="username" size="20" required></td></tr>
                             <tr><th><label for="password">Password</label></th></tr>
@@ -36,7 +29,48 @@
                         </table>
                     </form>
                 </div>
-
+            </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const next = document.querySelector('input[name="next"]').value;
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&next=${encodeURIComponent(next)}`
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    // Store the token
+                    localStorage.setItem('jwt_token', data.token);
+                    
+                    // Redirect to the next page or home
+                    window.location.href = next || '/';
+                } else {
+                    // Show error message
+                    const errorRow = document.getElementById('errorRow');
+                    errorRow.style.display = 'table-row';
+                    errorRow.querySelector('td').textContent = data.error || 'Login failed';
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                const errorRow = document.getElementById('errorRow');
+                errorRow.style.display = 'table-row';
+                errorRow.querySelector('td').textContent = 'An error occurred during login';
+            }
+        });
+    </script>
 {% endblock %}

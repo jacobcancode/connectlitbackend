@@ -11,6 +11,8 @@ from flask import current_app
 from werkzeug.security import generate_password_hash
 import shutil
 import datetime
+import jwt
+from functools import wraps
 
 
 
@@ -54,6 +56,42 @@ from model.listings import UserItem, initDefaultUser
 from model.carComments import CarComments
 # server only Views
 
+# JWT Configuration
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key')  # Change this in production
+JWT_ALGORITHM = 'HS256'
+
+# JWT Token Validation Decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+        
+        if not token:
+            if request.is_json:
+                return jsonify({'message': 'Token is missing'}), 401
+            return redirect(url_for('login'))
+        
+        try:
+            data = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            current_user = User.query.get(data['id'])
+            if not current_user:
+                raise jwt.InvalidTokenError
+        except jwt.ExpiredSignatureError:
+            if request.is_json:
+                return jsonify({'message': 'Token has expired'}), 401
+            return redirect(url_for('login'))
+        except jwt.InvalidTokenError:
+            if request.is_json:
+                return jsonify({'message': 'Invalid token'}), 401
+            return redirect(url_for('login'))
+        
+        return f(current_user, *args, **kwargs)
+    return decorated
+
 # register URIs for api endpoints
 app.register_blueprint(messages_api) # Adi added this, messages for his website
 app.register_blueprint(user_api)
@@ -78,22 +116,22 @@ app.register_blueprint(vinStore_api)
 app.register_blueprint(itemStore_api)
 
 @app.route('/carPosts')
-@login_required  # Ensure that only logged-in users can access this page
-def carPosts():
+@token_required
+def carPosts(current_user):
     carPost_data = CarPost.query.all()  # Fetch all car posts from the database
     print("Car Post Data:", carPost_data)  # Debugging line to check if data is fetched
     return render_template("carPosts.html", carPost_data=carPost_data)
 
 @app.route('/carChat')
-@login_required  # Ensure that only logged-in users can access this page
-def carChatPage():
+@token_required
+def carChatPage(current_user):
     carChat_data = carChat.query.all()  # Fetch all car chat messages from the database
     print("Car Chat Data:", carChat_data)  # Debugging line to check if data is fetched
     return render_template("carChat.html", carChat_data=carChat_data)
 
 @app.route('/carComments')
-@login_required  # Ensure that only logged-in users can access this page
-def carCommentsPage():
+@token_required
+def carCommentsPage(current_user):
     carComments_data = CarComments.query.all()  # Fetch all car comments from the database
     print("Car Comments Data:", carComments_data)  # Debugging line to check if data is fetched
     return render_template("carComments.html", carComments_data=carComments_data)
@@ -245,23 +283,45 @@ def is_safe_url(target):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    error = None
-    next_page = request.args.get('next', '') or request.form.get('next', '')
     if request.method == 'POST':
-        user = User.query.filter_by(_uid=request.form['username']).first()
-        if user and user.is_password(request.form['password']):
+        username = request.form.get('username')
+        password = request.form.get('password')
+        next_page = request.form.get('next')
+        
+        user = User.query.filter_by(_name=username).first()
+        if user and user.is_password(password):
+            # Generate JWT token
+            token = jwt.encode({
+                'id': user.id,
+                'username': user._name,
+                'role': user._role,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            }, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+            
+            if request.is_json or request.headers.get('Accept') == 'application/json':
+                return jsonify({
+                    'token': token,
+                    'user': {
+                        'id': user.id,
+                        'username': user._name,
+                        'role': user._role
+                    }
+                })
+            
             login_user(user)
-            if not is_safe_url(next_page):
-                return abort(400)
             return redirect(next_page or url_for('index'))
-        else:
-            error = 'Invalid username or password.'
-    return render_template("login.html", error=error, next=next_page)
+        
+        if request.is_json or request.headers.get('Accept') == 'application/json':
+            return jsonify({'error': 'Invalid username or password'}), 401
+        
+        return render_template('login.html', error='Invalid username or password')
+    
+    return render_template('login.html', next=request.args.get('next'))
     
 @app.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 @app.errorhandler(404)  # catch for URL not found
 def page_not_found(e):

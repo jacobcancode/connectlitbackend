@@ -26,11 +26,9 @@ This HTML is setup as a fragment allowing it to be "included" by other HTML file
                             <li><a class="dropdown-item" href={{ url_for('listingsPage') }}>Listings</a></li>
                             <li><a class="dropdown-item" href={{ url_for('vehiclesPage') }}>Users Cars</a></li>
                             <li><a class="dropdown-item" href={{ url_for('carCommentsPage') }}>Comments</a></li>
-                            
                         </ul>
                     </div>
                 </div>
-
             </div>
 
             <div class="btn-group">
@@ -39,27 +37,28 @@ This HTML is setup as a fragment allowing it to be "included" by other HTML file
                     <input id="search" type="search" placeholder="Search" aria-label="Search">
                 </div>
                 
-                {% if current_user.is_authenticated %}
-                    <div class="dropdown px-3">
-                        <span class="dropdown-toggle link-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ current_user.name }}
-                        </span>
-                        <ul class="dropdown-menu dropdown-menu-dark">
-                            <li>
-                                <div class="dropdown-item">
-                                    <p style="margin-bottom:2px"><strong>ID:</strong> {{current_user.uid}} </p>
-                                    
-                                    <p style="margin-bottom:2px"><strong>ROLE:</strong> {{current_user.role}} </p>
-                                    
-                                </div>
-                            </li>
-                            <li><a class="dropdown-item active" href="{{ url_for('logout') }}">Logout</a></li>
-                        </ul>
+                <!-- Login/Logout Section -->
+                <div id="authSection" class="px-3">
+                    <div id="loggedInSection" style="display: none;">
+                        <div class="dropdown">
+                            <span class="dropdown-toggle link-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="userName"></span>
+                            </span>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li>
+                                    <div class="dropdown-item">
+                                        <p style="margin-bottom:2px"><strong>ID:</strong> <span id="userId"></span></p>
+                                        <p style="margin-bottom:2px"><strong>ROLE:</strong> <span id="userRole"></span></p>
+                                    </div>
+                                </li>
+                                <li><a class="dropdown-item active" href="#" onclick="logout()">Logout</a></li>
+                            </ul>
+                        </div>
                     </div>
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="px-3 link-dark">Login</a>
-                {% endif %}
-                
+                    <div id="loggedOutSection" style="display: none;">
+                        <a href="{{ url_for('login') }}" class="link-dark">Login</a>
+                    </div>
+                </div>
 
                 <!-- Dark mode action -->
                 <div class="form-check form-switch">
@@ -70,6 +69,46 @@ This HTML is setup as a fragment allowing it to be "included" by other HTML file
 
             <!-- Navigation bar JavaScript support -->
             <script>
+                // Check login status and update UI
+                function updateAuthUI() {
+                    const token = localStorage.getItem('jwt_token');
+                    const loggedInSection = document.getElementById('loggedInSection');
+                    const loggedOutSection = document.getElementById('loggedOutSection');
+                    
+                    if (token) {
+                        try {
+                            // Decode the JWT token to get user info
+                            const base64Url = token.split('.')[1];
+                            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                            }).join(''));
+                            
+                            const userData = JSON.parse(jsonPayload);
+                            
+                            // Update UI with user info
+                            document.getElementById('userName').textContent = userData.username;
+                            document.getElementById('userId').textContent = userData.id;
+                            document.getElementById('userRole').textContent = userData.role;
+                            
+                            loggedInSection.style.display = 'block';
+                            loggedOutSection.style.display = 'none';
+                        } catch (e) {
+                            console.error('Error decoding token:', e);
+                            localStorage.removeItem('jwt_token');
+                            loggedInSection.style.display = 'none';
+                            loggedOutSection.style.display = 'block';
+                        }
+                    } else {
+                        loggedInSection.style.display = 'none';
+                        loggedOutSection.style.display = 'block';
+                    }
+                }
+
+                // Initial UI update
+                updateAuthUI();
+
+                // Search functionality
                 const search = document.getElementById('search');
                 const google = 'https://www.google.com/search?q=site%3A+';
                 const site = 'https://nighthawkcodingsociety.com';
