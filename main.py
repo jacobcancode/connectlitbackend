@@ -253,9 +253,14 @@ def before_request():
     if request.method == 'OPTIONS':
         return '', 200
 
-# Login route
+# Login page route
+@app.route('/login', methods=['GET'])
+def login_page():
+    return render_template('login.html')
+
+# API authentication route
 @app.route('/api/authenticate', methods=['GET', 'POST', 'OPTIONS'])
-def login():
+def authenticate():
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
         response.headers.add('Access-Control-Allow-Origin', '*')
