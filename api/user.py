@@ -146,39 +146,33 @@ class UserAPI:
         def get(self): 
             user = g.current_user
             user_data = user.read()
-    
-    # Add CORS headers manually
             resp = jsonify(user_data)
             resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
             resp.headers.add('Access-Control-Allow-Credentials', 'true')
             return resp
+    @token_required()
+    def put(self):
+        """
+        Update a user.
+        """
+        current_user = g.current_user
+        body = request.get_json()
 
-        def put(self):
-            """
-            Update a user.
-            """
-            current_user = g.current_user
-            body = request.get_json()
+        # Admin-specific update handling
+        if current_user.role == 'Admin':
+            uid = body.get('uid')
+            user = current_user if uid is None or uid == current_user.uid else User.query.filter_by(_uid=uid).first()
+            if not user:
+                return {'message': f'User {uid} not found'}, 404
 
-            # Admin-specific update handling
-            if current_user.role == 'Admin':
-                uid = body.get('uid')
-                if uid is None or uid == current_user.uid:
-                    user = current_user  # Admin is updating themselves
-                else:
-                    user = User.query.filter_by(_uid=uid).first()
-                    if user is None:
-                        return {'message': f'User {uid} not found'}, 404
-            else:
-                user = current_user  # Non-admin can only update themselves
-
-            # Update the user object with the new data
             user.update(body)
+            resp = jsonify(user.read())
+            resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+            resp.headers.add('Access-Control-Allow-Credentials', 'true')
+            return resp
 
-            return jsonify(user.read())
-
-        @token_required("Admin")
-        def delete(self):
+    @token_required("Admin")
+    def delete(self):
             """
             Delete a user.
             """
