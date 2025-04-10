@@ -152,7 +152,7 @@ def token_required(f):
 # Configure CORS
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["*"],
+        "origins": ["https://jacobcancode.github.io"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
         "supports_credentials": True
@@ -259,7 +259,15 @@ def handle_error(error):
 @app.before_request
 def before_request():
     if request.method == 'OPTIONS':
-        return '', 200
+        resp = current_app.make_default_options_response()
+        headers = resp.headers
+
+        headers['Access-Control-Allow-Origin'] = 'https://jacobcancode.github.io'
+        headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+        headers['Access-Control-Allow-Credentials'] = 'true'
+
+        return resp, 200
 
 # Login page route
 @app.route('/login', methods=['GET'])

@@ -143,15 +143,16 @@ class UserAPI:
                 }, 500
         
         @token_required()
-        def get(self):
-            """
-            Return the current user and return as a JSON object.
-            """
+        def get(self): 
             user = g.current_user
             user_data = user.read()
-            return jsonify(user_data)
+    
+    # Add CORS headers manually
+            resp = jsonify(user_data)
+            resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+            resp.headers.add('Access-Control-Allow-Credentials', 'true')
+            return resp
 
-        @token_required()
         def put(self):
             """
             Update a user.
