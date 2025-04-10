@@ -270,75 +270,7 @@ def login_page():
         return redirect(url_for('index'))
     return render_template('login.html')
 
-# API authentication route
-@app.route('/api/authenticate', methods=['GET', 'POST', 'OPTIONS'])
-def authenticate():
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        return response
-
-    if request.method == 'GET':
-        # Return a simple response for GET requests
-        response = jsonify({'status': 'ok', 'message': 'Authentication endpoint is available'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        return response
-
-    if request.method == 'POST':
-        try:
-            # Get credentials from request
-            if request.is_json:
-                data = request.get_json()
-                username = data.get('username')
-                password = data.get('password')
-            else:
-                username = request.form.get('username')
-                password = request.form.get('password')
-            
-            # Validate credentials
-            if not username or not password:
-                return jsonify({'error': 'Username and password are required'}), 400
-            
-            user = User.query.filter_by(_uid=username).first()
-            if not user or not user.is_password(password):
-                return jsonify({'error': 'Invalid username or password'}), 401
-            
-            # Generate token
-            token = generate_token(user)
-            if not token:
-                return jsonify({'error': 'Failed to generate token'}), 500
-            
-            # Prepare response
-            response_data = {
-                'token': token,
-                'user': {
-                    'id': user.id,
-                    'username': user._uid,
-                    'name': user._name
-                }
-            }
-            
-            response = jsonify(response_data)
-            response.headers.add('Access-Control-Allow-Origin', '*')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            response.headers['Authorization'] = f'Bearer {token}'
-            return response
-            
-        except Exception as e:
-            app.logger.error(f"Login error: {str(e)}")
-            response = jsonify({'error': 'An error occurred during login'})
-            response.headers.add('Access-Control-Allow-Origin', '*')
-            response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-            response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            return response, 500
-
-    return jsonify({'error': 'Method not allowed'}), 405
-
+#
 # Register blueprints
 app.register_blueprint(user_api)
 app.register_blueprint(pfp_api)

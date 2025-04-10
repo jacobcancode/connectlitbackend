@@ -190,123 +190,127 @@ class UserAPI:
             user.delete()
             return f"Deleted user: {json}", 204  # use 200 to test with Postman
 
-    class _Security(Resource):
+class _Security(Resource):
+    """
+    Security-related API operations.
+    """
+
+    def post(self):
         """
-        Security-related API operations.
+        Authenticate a user and generate a JWT token.
         """
-
-        def post(self):
-            """
-            Authenticate a user and generate a JWT token.
-            """
-            try:
-                body = request.get_json()
-                if not body:
-                    return {
-                        "message": "Please provide user details",
-                        "error": "Bad request"
-                    }, 400
-
-                # Get Data
-                uid = body.get('uid')
-                if uid is None:
-                    return {
-                        "message": "User ID is missing",
-                        "error": "Validation error"
-                    }, 401
-                password = body.get('password')
-                if not password:
-                    return {
-                        "message": "Password is missing",
-                        "error": "Validation error"
-                    }, 401
-
-                # Find user
-                user = User.query.filter_by(_uid=uid).first()
-                if user is None:
-                    return {
-                        "message": "User not found",
-                        "error": "Authentication error"
-                    }, 401
-
-                if not user.is_password(password):
-                    return {
-                        "message": "Invalid password",
-                        "error": "Authentication error"
-                    }, 401
-
-                # Generate token
-                token = jwt.encode(
-                    {
-                        "_uid": user._uid,
-                        "exp": datetime.utcnow() + timedelta(seconds=3600)  # Token expires in 1 hour
-                    },
-                    current_app.config["SECRET_KEY"],
-                    algorithm="HS256"
-                )
-
-                # Create response with cookie and CORS headers
-                resp = Response(json.dumps({
-                    "message": f"Authentication for {user._uid} successful",
-                    "user": user.read()
-                }), mimetype='application/json')
-                
-                resp.set_cookie(
-                    current_app.config["JWT_TOKEN_NAME"],
-                    token,
-                    max_age=3600,
-                    secure=True,
-                    httponly=True,
-                    path='/',
-                    samesite='None',  # Required for cross-site requests
-                    domain='.github.io'  # Allow all GitHub Pages subdomains
-                )
-                
-                # Add CORS headers
-                resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
-                resp.headers.add('Access-Control-Allow-Credentials', 'true')
-                resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                return resp
-
-            except Exception as e:
-                print(f"Login error: {str(e)}")
+        try:
+            body = request.get_json()
+            if not body:
                 return {
-                    "message": "An error occurred during login",
-                    "error": str(e)
-                }, 500
+                    "message": "Please provide user details",
+                    "error": "Bad request"
+                }, 400
 
-        @token_required()
-        def delete(self):
-            """
-            Invalidate the current user's token by setting its expiry to 0.
-            """
-            current_user = g.current_user
-            try:
-                # Generate a token with practically 0 age
-                token = jwt.encode(
-                    {"_uid": current_user._uid, "exp": datetime.utcnow()},
-                    current_app.config["SECRET_KEY"],
-                    algorithm="HS256"
-                )
-
-                # Prepare a response indicating the token has been invalidated
-                resp = Response("Token invalidated successfully")
-                resp.set_cookie(
-                    current_app.config["JWT_TOKEN_NAME"],
-                    token,
-                    max_age=0,  # Immediately expire the cookie
-                    secure=True,
-                    httponly=True,
-                    path='/',
-                    samesite='None'
-                )
-                return resp
-            except Exception as e:
+            # Get Data
+            uid = body.get('uid')
+            if uid is None:
                 return {
-                    "message": "Failed to invalidate token",
-                    "error": str(e)
-                }, 500
+                    "message": "User ID is missing",
+                    "error": "Validation error"
+                }, 401
+            password = body.get('password')
+            if not password:
+                return {
+                    "message": "Password is missing",
+                    "error": "Validation error"
+                }, 401
+
+            # Find user
+            user = User.query.filter_by(_uid=uid).first()
+            if user is None:
+                return {
+                    "message": "User not found",
+                    "error": "Authentication error"
+                }, 401
+
+            if not user.is_password(password):
+                return {
+                    "message": "Invalid password",
+                    "error": "Authentication error"
+                }, 401
+
+            # Generate token
+            token = jwt.encode(
+                {
+                    "_uid": user._uid,
+                    "exp": datetime.utcnow() + timedelta(seconds=3600)
+                },
+                current_app.config["SECRET_KEY"],
+                algorithm="HS256"
+            )
+
+            # Return both token and user data in JSON
+            response_data = {
+                "message": f"Authentication for {user._uid} successful",
+                "token": token,
+                "user": user.read()
+            }
+
+            # ✅ Use jsonify for proper headers and encoding
+            resp = jsonify(response_data)
+
+            # ✅ Set the token as an HttpOnly cookie
+            resp.set_cookie(
+                current_app.config["JWT_TOKEN_NAME"],
+                token,
+                max_age=3600,
+                secure=True,
+                httponly=True,
+                path='/',
+                samesite='None',
+                domain='.github.io'
+            )
+
+            # ✅ CORS headers for GitHub Pages
+            resp.headers.add('Access-Control-Allow-Origin', 'https://jacobcancode.github.io')
+            resp.headers.add('Access-Control-Allow-Credentials', 'true')
+            resp.headers.add('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            resp.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+            return resp
+
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            return {
+                "message": "An error occurred during login",
+                "error": str(e)
+            }, 500
+
+    @token_required()
+    def delete(self):
+        """
+        Invalidate the current user's token by setting its expiry to 0.
+        """
+        current_user = g.current_user
+        try:
+            token = jwt.encode(
+                {"_uid": current_user._uid, "exp": datetime.utcnow()},
+                current_app.config["SECRET_KEY"],
+                algorithm="HS256"
+            )
+
+            resp = Response("Token invalidated successfully")
+            resp.set_cookie(
+                current_app.config["JWT_TOKEN_NAME"],
+                token,
+                max_age=0,
+                secure=True,
+                httponly=True,
+                path='/',
+                samesite='None'
+            )
+            return resp
+        except Exception as e:
+            return {
+                "message": "Failed to invalidate token",
+                "error": str(e)
+            }, 500
     class _ID(Resource):  # Individual identification API operation
         @token_required()
         def get(self):
