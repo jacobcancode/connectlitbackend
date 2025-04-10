@@ -149,15 +149,16 @@ def token_required(f):
         
     return decorated
 
-# Configure CORS
-CORS(app, resources={
+cors_origins = os.environ.get("CORS_ORIGINS", "").split(",")
+
+CORS(app, supports_credentials=True, resources={
     r"/api/*": {
-        "origins": ["https://jacobcancode.github.io"],
+        "origins": cors_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-        "supports_credentials": True
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
     }
 })
+
 
 # Serve static files
 @app.route('/static/<path:path>')
@@ -260,16 +261,16 @@ def handle_error(error):
 def before_request():
     if request.method == 'OPTIONS':
         resp = current_app.make_default_options_response()
-        headers = resp.headers
+        headers = resp.headers  # type: ignore
+        origin = request.headers.get("Origin")
+        if origin in cors_origins:
+            headers['Access-Control-Allow-Origin'] = origin
+            headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            headers['Access-Control-Allow-Credentials'] = 'true'
+        return resp
 
-        headers['Access-Control-Allow-Origin'] = 'https://jacobcancode.github.io'
-        headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-        headers['Access-Control-Allow-Credentials'] = 'true'
 
-        return resp, 200
-
-# Login page route
 @app.route('/login', methods=['GET'])
 def login_page():
     # Check if user is already authenticated
